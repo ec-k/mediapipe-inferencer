@@ -2,6 +2,7 @@ from mediapipe_inferencer_core.network.holistic_pose_sender import HolisticPoseS
 from mediapipe_inferencer_core.detector.holistic_detector import HolisticDetector
 from mediapipe_inferencer_core import visualizer
 from mediapipe_inferencer_core import packer
+from mediapipe_inferencer_core.iamge_provider import WebcamImageProvider
 
 import cv2
 import mediapipe as mp
@@ -20,15 +21,16 @@ if __name__ == "__main__":
   holistic_detector = HolisticDetector()
 
   cap = cv2.VideoCapture(0)
-  while cap.isOpened():
+  image_provider = WebcamImageProvider(cache_queue_length=2, device_index=0)
+  while image_provider.is_opened:
       # Break in key Ctrl+C pressed
       if cv2.waitKey(5) & 0xFF == 27:
           break
 
       # Inference pose
-      success, image = cap.read()
-      if not success:
-          print("Capturing is failed.")
+      image_provider.update()
+      image = image_provider.latest_frame
+      if image is None:
           continue
       holistic_detector.inference(image)
 
