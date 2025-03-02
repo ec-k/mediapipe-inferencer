@@ -21,7 +21,6 @@ if __name__ == "__main__":
         face=FaceDetector(root_directory + "/models/face_landmarker.task")
     )
 
-    cap = cv2.VideoCapture(0)
     image_provider = WebcamImageProvider(cache_queue_length=2, device_index=0)
     while image_provider.is_opened:
         # Break in key Ctrl+C pressed
@@ -52,5 +51,5 @@ if __name__ == "__main__":
             annotated_image = visualizer.draw_face_landmarks_on_image(annotated_image, results.face_results)
         cv2.imshow('MediaPipe Landmarks', cv2.flip(annotated_image, 1))
         time.sleep(1/60)
-    cap.release()
+    image_provider.release_capture()
 
