@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
         # Inference pose
         image_provider.update()
-        image = image_provider.latest_frame
+        image = cv2.cvtColor(image_provider.latest_frame, cv2.COLOR_RGBA2BGR)
         if image is None:
             continue
         holistic_detector.inference(image)
@@ -49,7 +49,7 @@ if __name__ == "__main__":
             annotated_image = visualizer.draw_hand_landmarks_on_image(annotated_image, results.hand_landmarks)
         if results.face_results is not None:
             annotated_image = visualizer.draw_face_landmarks_on_image(annotated_image, results.face_results)
-        cv2.imshow('MediaPipe Landmarks', cv2.flip(annotated_image, 1))
+        cv2.imshow('MediaPipe Landmarks', cv2.cvtColor(cv2.flip(annotated_image, 1), cv2.COLOR_BGR2RGB))
         time.sleep(1/60)
     image_provider.release_capture()
 
