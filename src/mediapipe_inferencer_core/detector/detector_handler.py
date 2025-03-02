@@ -1,7 +1,7 @@
 import mediapipe as mp
 import cv2
 import time
-from mediapipe_inferencer_core.data_class.result_data import DetectorResults
+from mediapipe_inferencer_core.data_class.result_data import HolisticResults
 from mediapipe_inferencer_core.detector.landmark_detector import LandmarkDetector
 
 
@@ -24,7 +24,7 @@ class DetectorHandler:
 
     @property
     def results(self):
-        return DetectorResults(
+        return HolisticResults(
             self.__pose.results,
             self.__hand.results,
             self.__face.results

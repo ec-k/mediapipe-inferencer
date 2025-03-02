@@ -1,7 +1,7 @@
 from mediapipe_inferencer_core.network.holistic_pose_sender import HolisticPoseSender
 from mediapipe_inferencer_core.detector.detector_handler import DetectorHandler
 from mediapipe_inferencer_core import visualizer
-from mediapipe_inferencer_core import packer
+from mediapipe_inferencer_core.packer import packer_for_sending
 from mediapipe_inferencer_core.iamge_provider import WebcamImageProvider
 from mediapipe_inferencer_core.detector.landmark_detector import PoseDetector, HandDetector, FaceDetector
 
@@ -38,17 +38,16 @@ if __name__ == "__main__":
         results = holistic_detector.results
 
         # Send results to solver app
-        packed_results = packer.pack_holistic_landmarks_result(results)
-        pose_sender.send_holistic_landmarks(packed_results)
+        pose_sender.send_holistic_landmarks(results)
 
         # Visualize resulted landmarks
         annotated_image = image
-        if holistic_detector.results.pose_landmarks is not None:
-            annotated_image = visualizer.draw_pose_landmarks_on_image(annotated_image, results.pose_landmarks)
-        if results.hand_landmarks is not None:
-            annotated_image = visualizer.draw_hand_landmarks_on_image(annotated_image, results.hand_landmarks)
-        if results.face_results is not None:
-            annotated_image = visualizer.draw_face_landmarks_on_image(annotated_image, results.face_results)
+        if results.pose is not None:
+            annotated_image = visualizer.draw_pose_landmarks_on_image(annotated_image, results.pose)
+        if results.hand is not None:
+            annotated_image = visualizer.draw_hand_landmarks_on_image(annotated_image, results.hand)
+        if results.face is not None:
+            annotated_image = visualizer.draw_face_landmarks_on_image(annotated_image, results.face)
         cv2.imshow('MediaPipe Landmarks', cv2.cvtColor(cv2.flip(annotated_image, 1), cv2.COLOR_BGR2RGB))
         time.sleep(1/60)
     image_provider.release_capture()
