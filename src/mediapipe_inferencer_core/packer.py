@@ -22,42 +22,28 @@ def pack_holistic_landmarks_result(holistic_results):
     return holistic_lm
 
 def pack_pose_landmarks(pose_landmarks):
-    formatted_landmarks = []
-
     if pose_landmarks is None:
-        return formatted_landmarks
-    for mp_lm in pose_landmarks:
-        formatted_landmarks.append(format_landmark(mp_lm))
+        return []
+    formatted_landmarks = [format_landmark(mp_lm) for mp_lm in pose_landmarks]
     return formatted_landmarks
 
 def pack_hand_landmarks(hand_landmarks):
-    formatted_landmarks = []
-
     if hand_landmarks is None:
-        return formatted_landmarks
-
+        return []
     confidence = hand_landmarks['confidence']
-    for mp_lm in hand_landmarks['landmark']:
-        formatted_landmarks.append(format_landmark_with_confidence(mp_lm, confidence))
-
+    formatted_landmarks = [format_landmark_with_confidence(mp_lm, confidence) for mp_lm in hand_landmarks['landmark']]
     return formatted_landmarks
 
 def pack_face_landmarks(face_landmarks):
-    formatted_landmarks = []
-
     if face_landmarks is None:
-        return formatted_landmarks
-    for mp_lm in face_landmarks:
-        formatted_landmarks.append(format_landmark(mp_lm))
+        return []
+    formatted_landmarks = [format_landmark(mp_lm) for mp_lm in face_landmarks]
     return formatted_landmarks
 
 def pack_blendshapes(blendshapes):
-    formatted_blendshapes = []
-
     if blendshapes is None:
-        return formatted_blendshapes
-    for bl in blendshapes:
-        formatted_blendshapes.append(bl.score)
+        return []
+    formatted_blendshapes = [ bl.score for bl in blendshapes]
     return formatted_blendshapes
 
 def format_landmark(mediapipe_landmark):
