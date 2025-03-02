@@ -1,7 +1,6 @@
 from mediapipe_inferencer_core.network.holistic_pose_sender import HolisticPoseSender
 from mediapipe_inferencer_core.detector.detector_handler import DetectorHandler
 from mediapipe_inferencer_core import visualizer
-from mediapipe_inferencer_core.packer import packer_for_sending
 from mediapipe_inferencer_core.image_provider import WebcamImageProvider
 from mediapipe_inferencer_core.detector.landmark_detector import PoseDetector, HandDetector, FaceDetector
 from mediapipe_inferencer_core.filter.exponential_smoothing import ExponentialSmoothing

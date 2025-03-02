@@ -29,28 +29,3 @@ class DetectorHandler:
             self.__hand.results,
             self.__face.results
         )
-
-
-def ResultVisualizer(image, results, isFlipped = True):
-    mp_drawing = mp.solutions.drawing_utils
-    mp_drawing_styles = mp.solutions.drawing_styles
-
-    # TODO: Rewrite this to use MediaPipe.Task results
-    mp_holistic = mp.solutions.holistic
-    mp_drawing.draw_landmarks(
-        image,
-        results.face_landmarks,
-        mp_holistic.FACEMESH_CONTOURS,
-        landmark_drawing_spec=None,
-        connection_drawing_spec=mp_drawing_styles
-        .get_default_face_mesh_contours_style())
-    mp_drawing.draw_landmarks(
-        image,
-        results.pose_landmarks,
-        mp_holistic.POSE_CONNECTIONS,
-        landmark_drawing_spec=mp_drawing_styles
-        .get_default_pose_landmarks_style())
-
-    # Flip the image horizontally for a selfie-view display.
-    if isFlipped:
-        cv2.imshow('MediaPipe Results', cv2.flip(image, 1))
