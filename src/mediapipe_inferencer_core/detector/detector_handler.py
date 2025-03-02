@@ -1,8 +1,7 @@
 import mediapipe as mp
-from mediapipe_inferencer_core.result_data import DetectorResults
 import cv2
 import time
-import concurrent.futures
+from mediapipe_inferencer_core.data_class.result_data import DetectorResults
 from mediapipe_inferencer_core.detector.landmark_detector import LandmarkDetector
 
 
@@ -11,7 +10,6 @@ class DetectorHandler:
         self.__pose = pose
         self.__hand = hand
         self.__face = face
-        self.__detectors = [self.__pose, self.__hand, self.__face]
         self.latest_time_ms = 0
 
     def inference(self, image):
@@ -19,10 +17,9 @@ class DetectorHandler:
         if t_ms <= self.latest_time_ms:
             return
         mp_image = mp.Image(image_format = mp.ImageFormat.SRGB, data = image)
-        # Run detections in parallel using ThreadPoolExecutor
-        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-            futures = [executor.submit(detector.inference, mp_image, t_ms) for detector in self.__detectors if detector is not None]
-            concurrent.futures.wait(futures)
+        self.__pose.inference(mp_image, t_ms)
+        self.__hand.inference(mp_image, t_ms)
+        self.__face.inference(mp_image, t_ms)
         self.latest_time_ms = t_ms
 
     @property
