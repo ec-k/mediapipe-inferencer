@@ -55,6 +55,9 @@ class FaceResult:
     @property
     def landmarks(self)->list[Landmark]:
         return self.__landmarks
+    @landmarks.setter
+    def landmarks(self, result:list[Landmark])->None:
+        self.__landmarks = result
     @property
     def blendshapes(self)->list[float]:
         return self.__blendshapes
