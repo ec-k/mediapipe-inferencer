@@ -1,24 +1,25 @@
 from mediapipe_inferencer_core.network.holistic_pose_sender import HolisticPoseSender
-from mediapipe_inferencer_core.detector.holistic_detector import HolisticDetector
+from mediapipe_inferencer_core.detector.detector_handler import DetectorHandler
 from mediapipe_inferencer_core import visualizer
 from mediapipe_inferencer_core import packer
 from mediapipe_inferencer_core.iamge_provider import WebcamImageProvider
+from mediapipe_inferencer_core.detector.landmark_detector import PoseDetector, HandDetector, FaceDetector
 
 import cv2
-import mediapipe as mp
-import numpy as np
 import time
+from pathlib import Path
 
 
 if __name__ == "__main__":
-  mp_drawing = mp.solutions.drawing_utils
-  mp_drawing_styles = mp.solutions.drawing_styles
-  mp_holistic = mp.solutions.holistic
-
   pose_sender = HolisticPoseSender()
   pose_sender.connect()
 
-  holistic_detector = HolisticDetector()
+  root_directory = str(Path(__file__).parent.parent)
+  holistic_detector = DetectorHandler(
+    pose=PoseDetector(root_directory + "/models/pose_landmarker_full.task"),
+    hand=HandDetector(root_directory + "/models/hand_landmarker.task"),
+    face=FaceDetector(root_directory + "/models/face_landmarker.task")
+  )
 
   cap = cv2.VideoCapture(0)
   image_provider = WebcamImageProvider(cache_queue_length=2, device_index=0)

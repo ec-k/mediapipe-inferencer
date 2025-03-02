@@ -1,5 +1,5 @@
 from mediapipe_inferencer_core.network.holistic_pose_sender import HolisticPoseSender
-from mediapipe_inferencer_core.detector.holistic_detector import HolisticDetector
+from mediapipe_inferencer_core.detector.detector_handler import DetectorHandler
 from mediapipe_inferencer_core import packer
 from mediapipe_inferencer_core import visualizer
 
@@ -41,7 +41,7 @@ if __name__ == "__main__":
   pose_sender = HolisticPoseSender("localhost", 9001)
   pose_sender.connect()
 
-  holistic_detector = HolisticDetector()
+  holistic_detector = DetectorHandler()
 
   width = 1280
   height = 720
