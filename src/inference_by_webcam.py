@@ -2,7 +2,7 @@ from mediapipe_inferencer_core.network.holistic_pose_sender import HolisticPoseS
 from mediapipe_inferencer_core.detector.detector_handler import DetectorHandler
 from mediapipe_inferencer_core import visualizer
 from mediapipe_inferencer_core.packer import packer_for_sending
-from mediapipe_inferencer_core.iamge_provider import WebcamImageProvider
+from mediapipe_inferencer_core.image_provider import WebcamImageProvider
 from mediapipe_inferencer_core.detector.landmark_detector import PoseDetector, HandDetector, FaceDetector
 
 import cv2
@@ -34,7 +34,7 @@ if __name__ == "__main__":
             continue
         holistic_detector.inference(image)
 
-        # Filtering (Note: use copy.deepcopy if you need to filter results)
+        # Filtering
         results = holistic_detector.results
 
         # Send results to solver app
