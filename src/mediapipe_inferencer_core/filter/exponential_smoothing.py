@@ -1,20 +1,22 @@
 from mediapipe_inferencer_core.data_class.landmark import Landmark
-from mediapipe_inferencer_core.filter.landmark_filter import LandmarkFilter
+from mediapipe_inferencer_core.filter.landmark_filter import ILandmarkFilter
 
-class ExponentialSmoothing(LandmarkFilter):
+class ExponentialSmoothing(ILandmarkFilter):
     def __init__(self, smoothing_factor):
-        super().__init__(filter_length=1)
+        super().__init__()
         self.__smoothing_factor = smoothing_factor
+        self._prev_results = None
+
+    @property
+    def result(self)->list[Landmark]:
+        return self._prev_results
 
     def filter(self, results:list[Landmark]):
         if results is None:
             return
-        filtered = results if len(self._prev_results) < 1 else self._filter(results, self._prev_results[0], self.__smoothing_factor)
-        self._cached_result = filtered
-        self._push(filtered)
-        if len(self._prev_results) > self._filter_length:
-            self._pop()
-        return self._cached_result
+        filtered = results if self._prev_results is None else self._filter(results, self._prev_results, self.__smoothing_factor)
+        self._update_result_cache(filtered)
+        return filtered
 
     def _filter(self, current:list[Landmark], prev:list[Landmark], smoothing_factor:float)->list[Landmark]:
         if prev is None or len(prev) < 1:
@@ -24,3 +26,6 @@ class ExponentialSmoothing(LandmarkFilter):
 
     def _filter_per_landmark(current: Landmark, prev: Landmark, smoothing_factor:float)->Landmark:
         return Landmark.lerp(prev, current, smoothing_factor)
+
+    def _update_result_cache(self, result: list[Landmark]):
+        self._prev_results = result
