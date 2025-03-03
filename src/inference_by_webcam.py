@@ -4,6 +4,7 @@ from mediapipe_inferencer_core import visualizer
 from mediapipe_inferencer_core.image_provider import WebcamImageProvider
 from mediapipe_inferencer_core.detector.landmark_detector import PoseDetector, HandDetector, FaceDetector
 from mediapipe_inferencer_core.filter.exponential_smoothing import ExponentialSmoothing
+from mediapipe_inferencer_core.filter.one_euro_filter import OneEuroFilter
 
 import cv2
 import time
@@ -22,14 +23,15 @@ if __name__ == "__main__":
     )
 
     image_provider = WebcamImageProvider(cache_queue_length=2, device_index=0)
+    min_cutoff, slope, d_min_cutoff = 1.0, 4, 1.0
     filter = {
-        'pose_local':ExponentialSmoothing(0.8),
-        'pose_world':ExponentialSmoothing(0.8),
-        'left_hand_local': ExponentialSmoothing(0.65),
-        'left_hand_world': ExponentialSmoothing(0.65),
-        'right_hand_local': ExponentialSmoothing(0.65),
-        'right_hand_world': ExponentialSmoothing(0.65),
-        'face_landmark': ExponentialSmoothing(0.8)
+        'pose_local':       OneEuroFilter(min_cutoff, slope, d_min_cutoff),
+        'pose_world':       OneEuroFilter(min_cutoff, slope, d_min_cutoff),
+        'left_hand_local':  OneEuroFilter(min_cutoff, slope, d_min_cutoff),
+        'left_hand_world':  OneEuroFilter(min_cutoff, slope, d_min_cutoff),
+        'right_hand_local': OneEuroFilter(min_cutoff, slope, d_min_cutoff),
+        'right_hand_world': OneEuroFilter(min_cutoff, slope, d_min_cutoff),
+        'face_landmark':    OneEuroFilter(min_cutoff, slope, d_min_cutoff)
         }
     while image_provider.is_opened:
         # Break in key Ctrl+C pressed
@@ -45,13 +47,14 @@ if __name__ == "__main__":
 
         # Filtering
         results = copy.deepcopy(holistic_detector.results)
-        results.pose.local = filter['pose_local'].filter(results.pose.local)
-        results.pose.world = filter['pose_world'].filter(results.pose.world)
-        results.hand.left.local = filter['left_hand_local'].filter(results.hand.left.local)
-        results.hand.left.world = filter['left_hand_world'].filter(results.hand.left.world)
-        results.hand.right.local = filter['right_hand_local'].filter(results.hand.right.local)
-        results.hand.right.world = filter['right_hand_world'].filter(results.hand.right.world)
-        results.face.landmarks = filter['face_landmark'].filter(results.face.landmarks)
+        time_s = results.time
+        results.pose.local = filter['pose_local'].filter(results.pose.local, time_s)
+        results.pose.world = filter['pose_world'].filter(results.pose.world, time_s)
+        results.hand.left.local = filter['left_hand_local'].filter(results.hand.left.local, time_s)
+        results.hand.left.world = filter['left_hand_world'].filter(results.hand.left.world, time_s)
+        results.hand.right.local = filter['right_hand_local'].filter(results.hand.right.local, time_s)
+        results.hand.right.world = filter['right_hand_world'].filter(results.hand.right.world, time_s)
+        results.face.landmarks = filter['face_landmark'].filter(results.face.landmarks, time_s)
 
         # Send results to solver app
         pose_sender.send_holistic_landmarks(results)

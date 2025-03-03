@@ -12,6 +12,10 @@ class LandmarkFilter(ABC):
     def filter(self, results:list[Landmark]):
         pass
 
+    @property
+    def result(self):
+        return self._cached_result
+
     def _push(self, results):
         self._prev_results.append(results)
 
