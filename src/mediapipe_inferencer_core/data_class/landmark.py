@@ -23,6 +23,18 @@ class Landmark:
     def Landmark(self):
         return self.__value
 
+    def sub(lm_1:Landmark, lm_2:Landmark)->Landmark:
+        pos = np.subtract(lm_1.position, lm_2.position)
+        confidence = min(lm_1.confidence, lm_2.confidence)
+        return Landmark(pos[0], pos[1], pos[2], confidence)
+
+    def multiply(lm:Landmark, scalar:float)->Landmark:
+        pos = np.multiply(lm.position, scalar)
+        return Landmark(pos[0], pos[1], pos[2], lm.confidence)
+    
+    def magnitude(lm:Landmark)->float:
+        return np.linalg.norm(lm[0:3])
+
     def lerp(from_lm: Landmark, to_lm: Landmark, lerp_amount: float) -> Landmark:
         amount = float_util.clamp(lerp_amount, 0, 1)
         np_result = np.multiply(to_lm.Landmark, amount) + np.multiply(from_lm.Landmark, 1-amount)
