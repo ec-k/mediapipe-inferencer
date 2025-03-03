@@ -27,5 +27,6 @@ class DetectorHandler:
         return HolisticResults(
             self.__pose.results,
             self.__hand.results,
-            self.__face.results
+            self.__face.results,
+            self.latest_time_ms / 1000
         )

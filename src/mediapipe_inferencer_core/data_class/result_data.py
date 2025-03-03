@@ -64,10 +64,11 @@ class FaceResult:
 
 
 class HolisticResults:
-    def __init__(self, raw_pose, raw_hand, raw_face):
+    def __init__(self, raw_pose, raw_hand, raw_face, time_s):
         self.__pose_result = LandmarkResult()
         self.__hand_result = HandResult()
         self.__face_results = FaceResult()
+        self.__time_s = time_s
         self.update(raw_pose, raw_hand, raw_face)
 
     def update(self, raw_pose, raw_hand, raw_face):
@@ -90,3 +91,6 @@ class HolisticResults:
     @property
     def face(self)->FaceResult:
         return self.__face_results
+    @property
+    def time(self)->float:
+        return self.__time_s
