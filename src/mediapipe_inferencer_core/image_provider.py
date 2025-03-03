@@ -39,3 +39,16 @@ class WebcamImageProvider(ImageProvider):
         return self.__cap.isOpened()
     def release_capture(self) -> None:
         self.__cap.release()
+
+class MmapImageProvider(ImageProvider):
+    def __init__(self, cache_queue_length, data_file_path, shape):
+        super().__init__(cache_queue_length)
+        self.__mmap = np.memmap(
+            data_file_path,
+            dtype='uint8',
+            mode='r',
+            shape=shape
+        )
+        self.update()
+    def _fetch_image(self):
+        return self.__mmap

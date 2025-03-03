@@ -10,6 +10,7 @@ class DetectorHandler:
         self.__pose = pose
         self.__hand = hand
         self.__face = face
+        self.__detectors = [self.__pose, self.__hand, self.__face]
         self.latest_time_ms = 0
 
     def inference(self, image):
@@ -17,16 +18,19 @@ class DetectorHandler:
         if t_ms <= self.latest_time_ms:
             return
         mp_image = mp.Image(image_format = mp.ImageFormat.SRGB, data = image)
-        self.__pose.inference(mp_image, t_ms)
-        self.__hand.inference(mp_image, t_ms)
-        self.__face.inference(mp_image, t_ms)
+        for detector in self.__detectors:
+            if detector is not None:
+                detector.inference(mp_image, t_ms)
         self.latest_time_ms = t_ms
 
     @property
     def results(self):
+        pose_result = self.__pose.results if self.__pose is not None else None
+        hand_result = self.__hand.results if self.__hand is not None else None
+        face_result = self.__face.results if self.__face is not None else None
         return HolisticResults(
-            self.__pose.results,
-            self.__hand.results,
-            self.__face.results,
+            pose_result,
+            hand_result,
+            face_result,
             self.latest_time_ms / 1000
         )
