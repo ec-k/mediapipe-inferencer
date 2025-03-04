@@ -2,7 +2,7 @@
 import mediapipe as mp
 from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
-from mediapipe_inferencer_core.data_class.result_data import LandmarkResult, HandResult, FaceResult
+from mediapipe_inferencer_core.data_class import LandmarkResult, HandResult, FaceResult
 import numpy as np
 
 
