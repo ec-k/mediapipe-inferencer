@@ -1,7 +1,7 @@
 from mediapipe_inferencer_core.network.udp_client import UdpClient
 from mediapipe_inferencer_core.packer.packer_for_sending import pack_holistic_landmarks_result
 from mediapipe_inferencer_core.data_class.result_data import HolisticResults
-from proto.holistic_landmarks_pb2 import HolisticLandmarks
+
 class HolisticPoseSender:
     def __init__(self, address=None, port=None):
         self.client = UdpClient(address, port)

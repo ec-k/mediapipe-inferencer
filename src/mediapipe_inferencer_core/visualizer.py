@@ -15,7 +15,7 @@ def draw_pose_landmarks_on_image(rgb_image, detection_result:LandmarkResult):
     # Draw the pose landmarks.
     pose_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
     pose_landmarks_proto.landmark.extend([
-        landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in pose_landmarks
+        landmark_pb2.NormalizedLandmark(x=landmark[0], y=landmark[1], z=landmark[2]) for landmark in pose_landmarks.values
     ])
     solutions.drawing_utils.draw_landmarks(
         annotated_image,
@@ -37,7 +37,7 @@ def draw_hand_landmarks_on_image(rgb_image, detection_result:HandResult):
         # Draw the hand landmarks.
         hand_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
         hand_landmarks_proto.landmark.extend([
-            landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in hand_landmarks
+            landmark_pb2.NormalizedLandmark(x=landmark[0], y=landmark[1], z=landmark[2]) for landmark in hand_landmarks.values
         ])
         solutions.drawing_utils.draw_landmarks(
             annotated_image,
@@ -56,7 +56,7 @@ def draw_face_landmarks_on_image(rgb_image, detection_result:FaceResult):
     # Draw the face landmarks.
     face_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
     face_landmarks_proto.landmark.extend([
-        landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in face_landmarks
+        landmark_pb2.NormalizedLandmark(x=landmark[0], y=landmark[1], z=landmark[2]) for landmark in face_landmarks.values
     ])
 
     solutions.drawing_utils.draw_landmarks(
