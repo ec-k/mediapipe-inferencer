@@ -1,4 +1,4 @@
-from mediapipe_inferencer_core.data_class.landmark import Landmark
+from mediapipe_inferencer_core.data_class import LandmarkList
 from mediapipe_inferencer_core.packer import pack_to_landmark
 
 class LandmarkResult:
@@ -6,13 +6,13 @@ class LandmarkResult:
         self.__local = None
         self.__world = None
     @property
-    def local(self) -> list[Landmark]:
+    def local(self) -> LandmarkList:
         return self.__local
     @local.setter
     def local(self, result) -> None:
         self.__local = result
     @property
-    def world(self) -> list[Landmark]:
+    def world(self) -> LandmarkList:
         return self.__world
     @world.setter
     def world(self, result) -> None:
@@ -53,10 +53,10 @@ class FaceResult:
                 self.__blendshapes = pack_to_landmark.pack_blendshapes(face_results.face_blendshapes[0])
 
     @property
-    def landmarks(self)->list[Landmark]:
+    def landmarks(self)->LandmarkList:
         return self.__landmarks
     @landmarks.setter
-    def landmarks(self, result:list[Landmark])->None:
+    def landmarks(self, result:LandmarkList)->None:
         self.__landmarks = result
     @property
     def blendshapes(self)->list[float]:
