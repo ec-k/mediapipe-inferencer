@@ -2,7 +2,7 @@ from mediapipe_inferencer_core.network import HolisticPoseSender
 from mediapipe_inferencer_core.detector import DetectorHandler, PoseDetector, HandDetector, FaceDetector
 from mediapipe_inferencer_core import visualizer
 from mediapipe_inferencer_core.image_provider import WebcamImageProvider
-from mediapipe_inferencer_core.filter import ExponentialSmoothing, OneEuroFilter
+from mediapipe_inferencer_core.filter import Gaussian1dFilter, ExponentialSmoothing
 
 import cv2
 import time
@@ -21,15 +21,16 @@ if __name__ == "__main__":
     )
 
     image_provider = WebcamImageProvider(cache_queue_length=2, device_index=0)
-    min_cutoff, slope, d_min_cutoff = 1.0, 4, 1.0
+    sigma, window_size = 3, 31
+    n_pose_landmarks, n_hand_landmarks = 33, 21
     filter = {
-        'pose_local':       OneEuroFilter(min_cutoff, slope, d_min_cutoff),
-        'pose_world':       OneEuroFilter(min_cutoff, slope, d_min_cutoff),
-        'left_hand_local':  OneEuroFilter(min_cutoff, slope, d_min_cutoff),
-        'left_hand_world':  OneEuroFilter(min_cutoff, slope, d_min_cutoff),
-        'right_hand_local': OneEuroFilter(min_cutoff, slope, d_min_cutoff),
-        'right_hand_world': OneEuroFilter(min_cutoff, slope, d_min_cutoff),
-        'face_landmark':    OneEuroFilter(min_cutoff, slope, d_min_cutoff)
+        'pose_local':       Gaussian1dFilter(sigma, window_size, n_pose_landmarks),
+        'pose_world':       Gaussian1dFilter(sigma, window_size, n_pose_landmarks),
+        'left_hand_local':  Gaussian1dFilter(sigma, window_size, n_hand_landmarks),
+        'left_hand_world':  Gaussian1dFilter(sigma, window_size, n_hand_landmarks),
+        'right_hand_local': Gaussian1dFilter(sigma, window_size, n_hand_landmarks),
+        'right_hand_world': Gaussian1dFilter(sigma, window_size, n_hand_landmarks),
+        'face_landmark':    ExponentialSmoothing(0.7)
         }
     while image_provider.is_opened:
         # Break in key Ctrl+C pressed
@@ -43,16 +44,18 @@ if __name__ == "__main__":
             continue
         holistic_detector.inference(image)
 
+        if holistic_detector.results is None:
+            continue
         # Filtering
         results = copy.deepcopy(holistic_detector.results)
         time_s = results.time
-        results.pose.local = filter['pose_local'].filter(results.pose.local, time_s)
-        results.pose.world = filter['pose_world'].filter(results.pose.world, time_s)
-        results.hand.left.local = filter['left_hand_local'].filter(results.hand.left.local, time_s)
-        results.hand.left.world = filter['left_hand_world'].filter(results.hand.left.world, time_s)
-        results.hand.right.local = filter['right_hand_local'].filter(results.hand.right.local, time_s)
-        results.hand.right.world = filter['right_hand_world'].filter(results.hand.right.world, time_s)
-        results.face.landmarks = filter['face_landmark'].filter(results.face.landmarks, time_s)
+        results.pose.local = filter['pose_local'].filter(results.pose.local)
+        results.pose.world = filter['pose_world'].filter(results.pose.world)
+        results.hand.left.local = filter['left_hand_local'].filter(results.hand.left.local)
+        results.hand.left.world = filter['left_hand_world'].filter(results.hand.left.world)
+        results.hand.right.local = filter['right_hand_local'].filter(results.hand.right.local)
+        results.hand.right.world = filter['right_hand_world'].filter(results.hand.right.world)
+        results.face.landmarks = filter['face_landmark'].filter(results.face.landmarks)
 
         # Send results to solver app
         pose_sender.send_holistic_landmarks(results)
