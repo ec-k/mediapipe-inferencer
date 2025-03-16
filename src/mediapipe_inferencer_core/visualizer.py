@@ -2,7 +2,7 @@
 import mediapipe as mp
 from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
-from mediapipe_inferencer_core.data_class import LandmarkResult, HandResult, FaceResult
+from mediapipe_inferencer_core.data_class import LandmarkResult, HandResult, FaceResult, LandmarkList
 import numpy as np
 
 
@@ -26,6 +26,29 @@ def draw_pose_landmarks_on_image(rgb_image, detection_result:LandmarkResult):
 
 def draw_hand_landmarks_on_image(rgb_image, detection_result:HandResult):
     hand_landmarks_list = [detection_result.left.local, detection_result.right.local]
+    annotated_image = np.copy(rgb_image)
+
+   # Loop through the detected hands to visualize.
+    for idx in range(len(hand_landmarks_list)):
+        hand_landmarks = hand_landmarks_list[idx]
+        if hand_landmarks is None:
+            continue
+
+        # Draw the hand landmarks.
+        hand_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
+        hand_landmarks_proto.landmark.extend([
+            landmark_pb2.NormalizedLandmark(x=landmark[0], y=landmark[1], z=landmark[2]) for landmark in hand_landmarks.values
+        ])
+        solutions.drawing_utils.draw_landmarks(
+            annotated_image,
+            hand_landmarks_proto,
+            solutions.hands.HAND_CONNECTIONS,
+            solutions.drawing_styles.get_default_hand_landmarks_style(),
+            solutions.drawing_styles.get_default_hand_connections_style())
+    return annotated_image
+
+def draw_hand_landmarks_on_image_from_LandmarkList(rgb_image, left_result: LandmarkList, right_result: LandmarkList):
+    hand_landmarks_list = [left_result, right_result]
     annotated_image = np.copy(rgb_image)
 
    # Loop through the detected hands to visualize.
