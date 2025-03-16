@@ -42,6 +42,16 @@ if __name__ == "__main__":
     filepath = project_root_directory + "/colorImg.dat"
     # image_provider = MmapImageProvider(cache_queue_length=2, data_file_path=filepath, shape=shape)
 
+    last_data={
+        'left':{
+            'local':None,
+            'world':None,
+        },
+        'right':{
+            'local':None,
+            'world':None
+        }
+    }
     for i in range(n_frames):
         imgname = str(i)
 
@@ -61,12 +71,18 @@ if __name__ == "__main__":
             if results.hand.left.world is not None and\
             results.hand.left.world.values is not None:
                 l_hand_world = results.hand.left.world.values
+                last_data['left']['world'] = copy.deepcopy(l_hand_world)
+            elif last_data['left']['world'] is not None:
+                l_hand_world = last_data['left']['world']
             else:
                 l_hand_world = LandmarkList([Landmark(0, 0, 0, 0) for _ in range(n_landmarks)]).values
 
             if results.hand.left.local is not None and\
             results.hand.left.local.values is not None:
                 l_hand_local = results.hand.left.local.values
+                last_data['left']['local'] = copy.deepcopy(l_hand_local)
+            elif last_data['left']['local'] is not None:
+                l_hand_local = last_data['left']['local']
             else:
                 l_hand_local = LandmarkList([Landmark(0, 0, 0, 0) for _ in range(n_landmarks)]).values
 
@@ -77,12 +93,18 @@ if __name__ == "__main__":
             if results.hand.right.world is not None and\
             results.hand.right.world.values is not None:
                 r_hand_world = results.hand.right.world.values
+                last_data['right']['world'] = copy.deepcopy(r_hand_world)
+            elif last_data['right']['world'] is not None:
+                r_hand_world = last_data['right']['world']
             else:
                 r_hand_world = LandmarkList([Landmark(0, 0, 0, 0) for _ in range(n_landmarks)]).values
 
             if results.hand.right.local is not None and\
             results.hand.right.local.values is not None:
                 r_hand_local = results.hand.right.local.values
+                last_data['right']['local'] = copy.deepcopy(r_hand_local)
+            elif last_data['right']['local'] is not None:
+                r_hand_local = last_data['right']['local']
             else:
                 r_hand_local = LandmarkList([Landmark(0, 0, 0, 0) for _ in range(n_landmarks)]).values
 
