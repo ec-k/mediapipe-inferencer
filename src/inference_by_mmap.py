@@ -2,7 +2,7 @@ from mediapipe_inferencer_core.network import HolisticPoseSender
 from mediapipe_inferencer_core.detector import DetectorHandler, HandDetector, FaceDetector
 from mediapipe_inferencer_core import visualizer
 from mediapipe_inferencer_core.image_provider import MmapImageProvider
-from mediapipe_inferencer_core.filter import OneEuroFilter
+from mediapipe_inferencer_core.filter import Gaussian1dFilter, OneEuroFilter
 
 from pathlib import Path
 import cv2
@@ -62,6 +62,7 @@ if __name__ == "__main__":
             annotated_image = visualizer.draw_hand_landmarks_on_image(annotated_image, results.hand)
         if results.face is not None:
             annotated_image = visualizer.draw_face_landmarks_on_image(annotated_image, results.face)
-        cv2.imshow('MediaPipe Landmarks', cv2.flip(cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB), 1))
+        # cv2.imshow('MediaPipe Landmarks', cv2.flip(cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB), 1))
+        cv2.imshow('MediaPipe Landmarks', cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB)) # no-flipping
         time.sleep(1/60)
     cv2.destroyAllWindows()
