@@ -12,7 +12,8 @@ dependencies = [
     "line-profiler (>=4.2.0,<5.0.0)",
     "mediapipe (==0.10.14)",
     "pytest (>=8.3.4,<9.0.0)",
-    "scipy (>=1.15.2,<2.0.0)"
+    "scipy (>=1.15.2,<2.0.0)",
+    "nuitka (>=2.7.12,<3.0.0)"
 ]
 
 [tool.poetry]
