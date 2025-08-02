@@ -1,5 +1,6 @@
 import numpy as np
-import proto.holistic_landmarks_pb2 as holistic_lm_pb2
+import proto_generated.holistic_landmarks_pb2 as holistic_lm_pb2
+from proto_generated import landmark_pb2
 from mediapipe_inferencer_core.data_class.result_data import HolisticResults
 from mediapipe_inferencer_core.data_class import LandmarkList
 
@@ -35,9 +36,9 @@ def pack_blendshapes(blendshapes: list[float])->list:
     return [ bl for bl in blendshapes]
 
 def format_landmark(landmark:np.ndarray):
-    packed_landmark = holistic_lm_pb2.Landmark()
-    packed_landmark.x = landmark[0]
-    packed_landmark.y = landmark[1]
-    packed_landmark.z = landmark[2]
+    packed_landmark = landmark_pb2.Landmark()
+    packed_landmark.position.x = landmark[0]
+    packed_landmark.position.y = landmark[1]
+    packed_landmark.position.z = landmark[2]
     packed_landmark.confidence = landmark[3]
     return packed_landmark
