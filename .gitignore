@@ -175,3 +175,7 @@ cython_debug/
 
 # mediapipe models
 models/
+
+# build by nuitka
+inference_by_mmap.build/
+inference_by_mmap.dist/
