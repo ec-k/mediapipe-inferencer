@@ -2,7 +2,7 @@ from mediapipe_inferencer_core.network import HolisticPoseSender
 from mediapipe_inferencer_core.detector import DetectorHandler, HandDetector, FaceDetector
 from mediapipe_inferencer_core import visualizer
 from mediapipe_inferencer_core.image_provider import MmapImageProvider
-from mediapipe_inferencer_core.filter import Gaussian1dFilter, OneEuroFilter
+from mediapipe_inferencer_core.filter import OneEuroFilter
 
 from pathlib import Path
 import cv2
