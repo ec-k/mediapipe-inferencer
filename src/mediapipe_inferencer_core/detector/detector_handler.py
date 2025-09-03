@@ -1,5 +1,4 @@
 import mediapipe as mp
-import cv2
 import time
 from mediapipe_inferencer_core.data_class.result_data import HolisticResults
 from mediapipe_inferencer_core.detector.landmark_detector import LandmarkDetector
