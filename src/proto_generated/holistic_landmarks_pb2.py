@@ -12,9 +12,9 @@ from google.protobuf.internal import builder as _builder
 _sym_db = _symbol_database.Default()
 
 
-import kinect_pose_landmarks_pb2 as kinect__pose__landmarks__pb2
-import hand_landmarks_pb2 as hand__landmarks__pb2
-import face_results_pb2 as face__results__pb2
+import proto_generated.kinect_pose_landmarks_pb2 as kinect__pose__landmarks__pb2
+import proto_generated.hand_landmarks_pb2 as hand__landmarks__pb2
+import proto_generated.face_results_pb2 as face__results__pb2
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18holistic_landmarks.proto\x12\x0ehumanLandmarks\x1a\x1bkinect_pose_landmarks.proto\x1a\x14hand_landmarks.proto\x1a\x12\x66\x61\x63\x65_results.proto\"\xf6\x01\n\x11HolisticLandmarks\x12:\n\rposeLandmarks\x18\x01 \x01(\x0b\x32#.humanLandmarks.KinectPoseLandmarks\x12\x38\n\x11leftHandLandmarks\x18\x02 \x01(\x0b\x32\x1d.humanLandmarks.HandLandmarks\x12\x39\n\x12rightHandLandmarks\x18\x03 \x01(\x0b\x32\x1d.humanLandmarks.HandLandmarks\x12\x30\n\x0b\x66\x61\x63\x65Results\x18\x04 \x01(\x0b\x32\x1b.humanLandmarks.FaceResultsb\x06proto3')

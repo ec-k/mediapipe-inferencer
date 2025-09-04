@@ -17,10 +17,7 @@ dependencies = [
 ]
 
 [tool.poetry]
-packages = [
-    {include = "mediapipe_inferencer_core", from = "src/mediapipe_inferencer_core"},
-    {include = "proto", from = "src/proto"},
-]
+packages = [{include="src"}]
 
 
 [build-system]
