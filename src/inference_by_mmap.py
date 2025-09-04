@@ -16,8 +16,8 @@ if __name__ == "__main__":
 
     root_directory = str(Path(__file__).parent.parent)
     holistic_detector = DetectorHandler(
-        hand=HandDetector(root_directory + "/models/hand_landmarker.task"),
-        face=FaceDetector(root_directory + "/models/face_landmarker.task")
+        hand=HandDetector(root_directory + "/models/hand_landmarker.task", 0.8),
+        face=FaceDetector(root_directory + "/models/face_landmarker.task", 0.8)
     )
 
     height, width = 720, 1280
