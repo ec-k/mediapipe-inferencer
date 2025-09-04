@@ -13,7 +13,7 @@ class LandmarkDetector(ABC):
 class PoseDetector(LandmarkDetector):
     def __init__(self, model_path):
         options = mp_tasks.vision.PoseLandmarkerOptions(
-            base_options = mp_tasks.BaseOptions(model_asset_buffer = open(model_path, "rb").read()),
+            base_options = mp_tasks.BaseOptions(model_asset_buffer = open(model_path, "rb").read(), delegate = "GPU"),
             running_mode = mp_tasks.vision.RunningMode.LIVE_STREAM,
             result_callback = self.__save_results
             )
@@ -34,7 +34,7 @@ class PoseDetector(LandmarkDetector):
 class HandDetector(LandmarkDetector):
     def __init__(self, model_path):
         options = mp_tasks.vision.HandLandmarkerOptions(
-            base_options = mp_tasks.BaseOptions(model_asset_buffer = open(model_path, "rb").read()),
+            base_options = mp_tasks.BaseOptions(model_asset_buffer = open(model_path, "rb").read(), delegate = "GPU"),
             num_hands = 2,
             running_mode = mp_tasks.vision.RunningMode.LIVE_STREAM,
             result_callback=self.__save_results)
@@ -56,7 +56,7 @@ class HandDetector(LandmarkDetector):
 class FaceDetector(LandmarkDetector):
     def __init__(self, model_path):
         options = mp_tasks.vision.FaceLandmarkerOptions(
-            base_options = mp_tasks.BaseOptions(model_asset_buffer = open(model_path, "rb").read()),
+            base_options = mp_tasks.BaseOptions(model_asset_buffer = open(model_path, "rb").read(), delegate = "GPU"),
             output_face_blendshapes = True,
             output_facial_transformation_matrixes = True,
             num_faces = 1,
