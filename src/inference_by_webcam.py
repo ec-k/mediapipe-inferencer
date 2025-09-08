@@ -4,20 +4,21 @@ from mediapipe_inferencer_core import visualizer
 from mediapipe_inferencer_core.image_provider import WebcamImageProvider
 from mediapipe_inferencer_core.filter import OneEuroFilter
 
+import numpy as np
 import cv2
 import time
 import copy
 from pathlib import Path
 
 if __name__ == "__main__":
-    pose_sender = HolisticPoseSender()
+    pose_sender = HolisticPoseSender("localhost", 9001)
     pose_sender.connect()
 
     root_directory = str(Path(__file__).parent.parent)
     holistic_detector = DetectorHandler(
-        pose=PoseDetector(root_directory + "/models/pose_landmarker_full.task"),
-        hand=HandDetector(root_directory + "/models/hand_landmarker.task"),
-        face=FaceDetector(root_directory + "/models/face_landmarker.task")
+        pose=PoseDetector(root_directory + "/models/pose_landmarker_full.task", 0.8),
+        hand=HandDetector(root_directory + "/models/hand_landmarker.task", 0.8),
+        face=FaceDetector(root_directory + "/models/face_landmarker.task", 0.8)
     )
 
     image_provider = WebcamImageProvider(cache_queue_length=2, device_index=0)
@@ -71,4 +72,3 @@ if __name__ == "__main__":
         cv2.imshow('MediaPipe Landmarks', cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB)) # no-flipping
         time.sleep(1/60)
     image_provider.release_capture()
-
