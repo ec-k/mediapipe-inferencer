@@ -14,7 +14,7 @@ class PoseDetector(LandmarkDetector):
     def __init__(self, model_path, min_confidence):
         options = mp_tasks.vision.PoseLandmarkerOptions(
             base_options = mp_tasks.BaseOptions(model_asset_buffer = open(model_path, "rb").read(), delegate = "GPU"),
-            min_detection_confidence = min_confidence,
+            min_pose_detection_confidence = min_confidence,
             min_tracking_confidence = min_confidence,
             running_mode = mp_tasks.vision.RunningMode.LIVE_STREAM,
             result_callback = self.__save_results
