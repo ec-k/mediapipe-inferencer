@@ -13,12 +13,20 @@ dependencies = [
     "mediapipe (==0.10.14)",
     "pytest (>=8.3.4,<9.0.0)",
     "scipy (>=1.15.2,<2.0.0)",
-    "nuitka (>=2.7.12,<3.0.0)"
+    "nuitka (>=2.7.12,<3.0.0)",
 ]
 
 [tool.poetry]
 packages = [{include="src"}]
 
+[tool.poetry.dependencies]
+python = ">=3.12,<4.0"
+
+[tool.poetry.group.dev.dependencies]
+deptry = "^0.23.1"
+
+[tool.depty]
+ignore_unused = ["mediapipe_inferencer_core", "proto_generated"]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
