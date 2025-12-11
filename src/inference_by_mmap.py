@@ -8,7 +8,8 @@ from pathlib import Path
 import cv2
 import copy
 import time
-
+import sys
+import tempfile
 
 if __name__ == "__main__":
     pose_sender = HolisticPoseSender("localhost", 9001)
@@ -22,9 +23,20 @@ if __name__ == "__main__":
 
     height, width = 720, 1280
     shape = (height, width, 4)
-    project_root_directory = str(Path(__file__).parent.parent.parent)
-    filepath = project_root_directory + "/colorImg.dat"
-    image_provider = MmapImageProvider(cache_queue_length=2, data_file_path=filepath, shape=shape)
+
+    studio_name = "AtelierRC"
+    app_name = "MediapipeAndKinectInferencer"
+    app_temp_directory = Path(tempfile.gettempdir()) / studio_name / app_name
+    filepath = app_temp_directory / "kinect_color_image.dat"
+    if not app_temp_directory.is_dir():
+        try:
+            app_temp_directory.mkdir(parents=True, exist_ok=True)
+            print(f"Created directory for ImageWriter: {app_temp_directory}")
+        except Exception as e:
+            print(f"Error creating directory '{app_temp_directory}': {e}", file=sys.stderr)
+            sys.exit(1)
+    filepath_str = str(filepath)
+    image_provider = MmapImageProvider(cache_queue_length=2, data_file_path=filepath_str, shape=shape)
 
     min_cutoff, slope, d_min_cutoff = 1.0, 4, 1.0
     filter = {
