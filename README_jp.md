@@ -21,21 +21,19 @@
 
 ## 必要なもの
 
-このプロジェクトは[Poetry](https://github.com/python-poetry/poetry)を利用しています．Poetry がインストールされていることを確認してください．
+このプロジェクトは[uv](https://github.com/astral-sh/uv)を利用しています．uv がインストールされていることを確認してください．
 
 ## 使用方法
 
 以下の手順で実行できます．
 
-1.  **仮想環境の有効化:**
+1.  **依存関係のインストール:**
+
     ```bash
-    poetry env activate
+    uv sync
     ```
-2.  **依存関係のインストール:**
-    ```bash
-    poetry install
-    ```
-3.  **スクリプトの実行:**
+
+2.  **スクリプトの実行:**
     以下のいずれかのスクリプトを実行してください．
 
     - `src/inference_by_mmap.py`:

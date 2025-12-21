@@ -2,11 +2,9 @@
 name = "mediapipe-inferencer-core"
 version = "0.1.0"
 description = ""
-authors = [
-    {name = "EC-K",email = "elxone.19jt@gmail.com"}
-]
-readme = "README.md"
+authors = [{ name = "EC-K", email = "elxone.19jt@gmail.com" }]
 requires-python = ">=3.12"
+readme = "README.md"
 dependencies = [
     "opencv-python (>=4.11.0.86,<5.0.0.0)",
     "line-profiler (>=4.2.0,<5.0.0)",
@@ -17,21 +15,21 @@ dependencies = [
     "numpy (>=2.3.5,<3.0.0)",
 ]
 
-[tool.poetry]
-packages = [{include="src"}]
+[dependency-groups]
+dev = ["deptry>=0.23.1,<0.24"]
 
-[tool.poetry.dependencies]
-python = ">=3.12,<4.0"
+[tool.hatch.build.targets.sdist]
+include = ["src"]
 
-[tool.poetry.group.dev.dependencies]
-deptry = "^0.23.1"
+[tool.hatch.build.targets.wheel]
+include = ["src"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.depty]
 ignore_unused = ["mediapipe_inferencer_core", "proto_generated"]
-
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 pythonpath = "src"
