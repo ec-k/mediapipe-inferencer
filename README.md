@@ -23,21 +23,19 @@ There is no particular uniqueness to this project.
 
 ## Requirements
 
-This project uses [Poetry](https://github.com/python-poetry/poetry). Please ensure Poetry is installed.
+This project uses [uv](https://github.com/astral-sh/uv). Please ensure uv is installed.
 
 ## Usage
 
 Follow these steps to run the project:
 
-1.  **Activate Virtual Environment:**
+1.  **Install Dependencies:**
+
     ```bash
-    poetry env activate
+    uv sync
     ```
-2.  **Install Dependencies:**
-    ```bash
-    poetry install
-    ```
-3.  **Run Script:**
+
+2.  **Run Script:**
     Execute one of the following scripts:
 
     - `src/inference_by_mmap.py`:
