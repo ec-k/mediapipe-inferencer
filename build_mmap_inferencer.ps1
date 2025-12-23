@@ -1,1 +1,1 @@
-poetry run nuitka --standalone .\src\inference_by_mmap.py
+uv run nuitka --standalone .\src\inference_by_mmap.py
