@@ -10,8 +10,16 @@ import copy
 import time
 import sys
 import tempfile
+import signal
+
+def handle_sigint(signum, frame):
+    global running
+    running = False
 
 if __name__ == "__main__":
+    global running
+    running = True
+
     pose_sender = HolisticPoseSender("localhost", 9001)
     pose_sender.connect()
 
@@ -46,7 +54,7 @@ if __name__ == "__main__":
         'right_hand_world': OneEuroFilter(min_cutoff, slope, d_min_cutoff),
         'face_landmark':    OneEuroFilter(min_cutoff, slope, d_min_cutoff)
         }
-    while True:
+    while running:
         # Break in key Ctrl+C pressed
         if cv2.waitKey(5) & 0xFF == 27:
             break
