@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0elandmark.proto\x12\x0ehumanLandmarks\"v\n\x08Landmark\x12*\n\x08position\x18\x01 \x01(\x0b\x32\x18.humanLandmarks.Position\x12*\n\x08rotation\x18\x02 \x01(\x0b\x32\x18.humanLandmarks.Rotation\x12\x12\n\nconfidence\x18\x03 \x01(\x02\"+\n\x08Position\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02\"6\n\x08Rotation\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02\x12\t\n\x01w\x18\x04 \x01(\x02\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0elandmark.proto\x12\x0ehumanLandmarks\"v\n\x08Landmark\x12*\n\x08position\x18\x01 \x01(\x0b\x32\x18.humanLandmarks.Position\x12*\n\x08rotation\x18\x02 \x01(\x0b\x32\x18.humanLandmarks.Rotation\x12\x12\n\nconfidence\x18\x03 \x01(\x02\"O\n\rLandmarkPoint\x12*\n\x08position\x18\x01 \x01(\x0b\x32\x18.humanLandmarks.Position\x12\x12\n\nconfidence\x18\x02 \x01(\x02\"+\n\x08Position\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02\"6\n\x08Rotation\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02\x12\t\n\x01w\x18\x04 \x01(\x02\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -23,9 +23,11 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
   _globals['_LANDMARK']._serialized_start=34
   _globals['_LANDMARK']._serialized_end=152
-  _globals['_POSITION']._serialized_start=154
-  _globals['_POSITION']._serialized_end=197
-  _globals['_ROTATION']._serialized_start=199
-  _globals['_ROTATION']._serialized_end=253
+  _globals['_LANDMARKPOINT']._serialized_start=154
+  _globals['_LANDMARKPOINT']._serialized_end=233
+  _globals['_POSITION']._serialized_start=235
+  _globals['_POSITION']._serialized_end=278
+  _globals['_ROTATION']._serialized_start=280
+  _globals['_ROTATION']._serialized_end=334
 # @@protoc_insertion_point(module_scope)
 
