@@ -8,7 +8,7 @@ def pack_holistic_landmarks_result(holistic_results: HolisticResults):
     holistic_lm = holistic_lm_pb2.HolisticLandmarks()
     pose = holistic_results.pose
     if (pose is not None) and (pose.world is not None) and (len(pose.world.values)>0):
-        holistic_lm.poseLandmarks.landmarks.extend(pack_landmarks(pose.world))
+        holistic_lm.mediaPipePoseLandmarks.landmarks.extend(pack_landmarks(pose.world))
 
     left_hand, right_hand = holistic_results.hand.left, holistic_results.hand.right
     if (left_hand is not None) and (left_hand.world is not None) and len(left_hand.world.values)>0:
@@ -36,7 +36,7 @@ def pack_blendshapes(blendshapes: list[float])->list:
     return [ bl for bl in blendshapes]
 
 def format_landmark(landmark:np.ndarray):
-    packed_landmark = landmark_pb2.Landmark()
+    packed_landmark = landmark_pb2.LandmarkPoint()
     packed_landmark.position.x = landmark[0]
     packed_landmark.position.y = landmark[1]
     packed_landmark.position.z = landmark[2]
