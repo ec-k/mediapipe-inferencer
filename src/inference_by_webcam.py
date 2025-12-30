@@ -76,7 +76,7 @@ if __name__ == "__main__":
         pose_sender.send_holistic_landmarks(results)
 
         # Visualize resulted landmarks
-        if settings.enable_visualize_window:
+        if settings.enable_visualization_window:
             annotated_image = image
             if results.pose is not None:
                 annotated_image = visualizer.draw_pose_landmarks_on_image(annotated_image, results.pose)
