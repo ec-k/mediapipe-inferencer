@@ -1,15 +1,14 @@
 from mediapipe_inferencer_core.network import HolisticPoseSender
-from mediapipe_inferencer_core.detector import DetectorHandler, HandDetector, FaceDetector
+from mediapipe_inferencer_core.detector import DetectorHandler, HandDetector, FaceDetector, PoseDetector
 from mediapipe_inferencer_core import visualizer
 from mediapipe_inferencer_core.image_provider import MmapImageProvider
 from mediapipe_inferencer_core.filter import OneEuroFilter
+from app_arg_parser import create_settings_from_args
 
 from pathlib import Path
 import cv2
 import copy
 import time
-import sys
-import tempfile
 import signal
 
 def handle_sigint(signum, frame):
@@ -20,11 +19,14 @@ if __name__ == "__main__":
     global running
     running = True
 
+    settings = create_settings_from_args()
+
     pose_sender = HolisticPoseSender("localhost", 9001)
     pose_sender.connect()
 
     root_directory = str(Path(__file__).parent.parent)
     holistic_detector = DetectorHandler(
+        pose=PoseDetector(root_directory + "/models/pose_landmarker_full.task", 0.8) if settings.enable_pose_inference else None,
         hand=HandDetector(root_directory + "/models/hand_landmarker.task", 0.8),
         face=FaceDetector(root_directory + "/models/face_landmarker.task", 0.8)
     )
@@ -32,21 +34,12 @@ if __name__ == "__main__":
     height, width = 720, 1280
     shape = (height, width, 4)
 
-    studio_name = "AtelierRC"
-    app_name = "MediapipeAndKinectInferencer"
-    app_temp_directory = Path(tempfile.gettempdir()) / studio_name / app_name
-    filepath = app_temp_directory / "kinect_color_image.dat"
-    if not app_temp_directory.is_dir():
-        try:
-            app_temp_directory.mkdir(parents=True, exist_ok=True)
-            print(f"Created directory for ImageWriter: {app_temp_directory}")
-        except Exception as e:
-            print(f"Error creating directory '{app_temp_directory}': {e}", file=sys.stderr)
-            sys.exit(1)
-    filepath_str = str(filepath)
-    image_provider = MmapImageProvider(cache_queue_length=2, data_file_path=filepath_str, shape=shape)
+    filepath = Path(settings.mmap_file_path)
+    if not filepath.exists():
+        raise FileNotFoundError(f"The specified path does not exist: '{filepath}'")
+    image_provider = MmapImageProvider(cache_queue_length=2, data_file_path=settings.mmap_file_path, shape=shape)
 
-    min_cutoff, slope, d_min_cutoff = 1.0, 4, 1.0
+    min_cutoff, slope, d_min_cutoff = 1.0, 4.0, 1.0
     filter = {
         'left_hand_local':  OneEuroFilter(min_cutoff, slope, d_min_cutoff),
         'left_hand_world':  OneEuroFilter(min_cutoff, slope, d_min_cutoff),
@@ -54,6 +47,10 @@ if __name__ == "__main__":
         'right_hand_world': OneEuroFilter(min_cutoff, slope, d_min_cutoff),
         'face_landmark':    OneEuroFilter(min_cutoff, slope, d_min_cutoff)
         }
+    if settings.enable_pose_inference:
+        filter['pose_local'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
+        filter['pose_world'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
+
     while running:
         # Break in key Ctrl+C pressed
         if cv2.waitKey(5) & 0xFF == 27:
@@ -72,17 +69,21 @@ if __name__ == "__main__":
         results.hand.right.local = filter['right_hand_local'].filter(results.hand.right.local, time_s)
         results.hand.right.world = filter['right_hand_world'].filter(results.hand.right.world, time_s)
         results.face.landmarks = filter['face_landmark'].filter(results.face.landmarks, time_s)
+        if settings.enable_pose_inference:
+            results.pose.local = filter['pose_local'].filter(results.pose.local, time_s)
+            results.pose.world = filter['pose_world'].filter(results.pose.world, time_s)
 
         # Send results to solver app
         pose_sender.send_holistic_landmarks(results)
 
         # Visualize resulted landmarks
-        annotated_image = image
-        if results.hand is not None:
-            annotated_image = visualizer.draw_hand_landmarks_on_image(annotated_image, results.hand)
-        if results.face is not None:
-            annotated_image = visualizer.draw_face_landmarks_on_image(annotated_image, results.face)
-        # cv2.imshow('MediaPipe Landmarks', cv2.flip(cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB), 1))
-        cv2.imshow('MediaPipe Landmarks', cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB)) # no-flipping
+        if settings.enable_visualize_window:
+            annotated_image = image
+            if results.hand is not None:
+                annotated_image = visualizer.draw_hand_landmarks_on_image(annotated_image, results.hand)
+            if results.face is not None:
+                annotated_image = visualizer.draw_face_landmarks_on_image(annotated_image, results.face)
+            # cv2.imshow('MediaPipe Landmarks', cv2.flip(cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB), 1))
+            cv2.imshow('MediaPipe Landmarks', cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB)) # no-flipping
         time.sleep(1/60)
     cv2.destroyAllWindows()
