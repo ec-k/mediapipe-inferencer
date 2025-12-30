@@ -81,6 +81,8 @@ if __name__ == "__main__":
         # Visualize resulted landmarks
         if settings.enable_visualization_window:
             annotated_image = image
+            if results.pose is not None:
+                annotated_image = visualizer.draw_pose_landmarks_on_image(annotated_image, results.pose)
             if results.hand is not None:
                 annotated_image = visualizer.draw_hand_landmarks_on_image(annotated_image, results.hand)
             if results.face is not None:
