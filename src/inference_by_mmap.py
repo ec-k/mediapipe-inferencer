@@ -11,13 +11,15 @@ import copy
 import time
 import signal
 
+running = True
+
 def handle_sigint(signum, frame):
     global running
     running = False
 
 if __name__ == "__main__":
-    global running
-    running = True
+    signal.signal(signal.SIGINT, handle_sigint)
+    signal.signal(signal.SIGTERM, handle_sigint)
 
     settings = create_settings_from_args()
 
