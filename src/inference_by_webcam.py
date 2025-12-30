@@ -9,8 +9,18 @@ import cv2
 import time
 import copy
 from pathlib import Path
+import signal
+
+running = True
+
+def handle_sigint(signum, frame):
+    global running
+    running = False
 
 if __name__ == "__main__":
+    signal.signal(signal.SIGINT, handle_sigint)
+    signal.signal(signal.SIGTERM, handle_sigint)
+
     settings = create_settings_from_args()
 
     pose_sender = HolisticPoseSender("localhost", 9001)
@@ -36,7 +46,7 @@ if __name__ == "__main__":
         filter['pose_local'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
         filter['pose_world'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
 
-    while image_provider.is_opened:
+    while running:
         # Break in key Ctrl+C pressed
         if cv2.waitKey(5) & 0xFF == 27:
             break
