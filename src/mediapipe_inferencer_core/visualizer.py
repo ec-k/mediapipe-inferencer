@@ -1,9 +1,9 @@
-
 import mediapipe as mp
 from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
 from mediapipe_inferencer_core.data_class import LandmarkResult, HandResult, FaceResult
 import numpy as np
+import cv2
 
 
 def draw_pose_landmarks_on_image(rgb_image, detection_result:LandmarkResult):
@@ -25,26 +25,49 @@ def draw_pose_landmarks_on_image(rgb_image, detection_result:LandmarkResult):
     return annotated_image
 
 def draw_hand_landmarks_on_image(rgb_image, detection_result:HandResult):
-    hand_landmarks_list = [detection_result.left.local, detection_result.right.local]
+    hands_to_draw = [
+        ("Left", detection_result.left.local),
+        ("Right", detection_result.right.local)
+    ]
     annotated_image = np.copy(rgb_image)
+    img_height, img_width, _ = annotated_image.shape
 
-   # Loop through the detected hands to visualize.
-    for idx in range(len(hand_landmarks_list)):
-        hand_landmarks = hand_landmarks_list[idx]
-        if hand_landmarks is None:
+    for label, local_landmarks in hands_to_draw:
+        if local_landmarks is None or local_landmarks.values is None:
             continue
 
-        # Draw the hand landmarks.
+        # 1. Draw hand landmarks and connections
         hand_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
         hand_landmarks_proto.landmark.extend([
-            landmark_pb2.NormalizedLandmark(x=landmark[0], y=landmark[1], z=landmark[2]) for landmark in hand_landmarks.values
+            landmark_pb2.NormalizedLandmark(x=lm[0], y=lm[1], z=lm[2])
+            for lm in local_landmarks.values
         ])
         solutions.drawing_utils.draw_landmarks(
             annotated_image,
             hand_landmarks_proto,
             solutions.hands.HAND_CONNECTIONS,
             solutions.drawing_styles.get_default_hand_landmarks_style(),
-            solutions.drawing_styles.get_default_hand_connections_style())
+            solutions.drawing_styles.get_default_hand_connections_style()
+        )
+
+        # 2. Draw handedness text
+        # Use the wrist landmark (index 0) as the reference point for the text
+        wrist = local_landmarks.values[0]
+        px_x = int(wrist[0] * img_width)
+        px_y = int(wrist[1] * img_height)
+
+        # Draw text slightly above the wrist point
+        cv2.putText(
+            annotated_image,
+            label,
+            (px_x, px_y - 20),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,                    # Font scale
+            (91, 249, 255),       # Color: Light Cyan
+            2,                    # Thickness
+            cv2.LINE_AA
+        )
+
     return annotated_image
 
 def draw_face_landmarks_on_image(rgb_image, detection_result:FaceResult):
