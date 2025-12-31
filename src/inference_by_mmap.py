@@ -41,7 +41,7 @@ if __name__ == "__main__":
         raise FileNotFoundError(f"The specified path does not exist: '{filepath}'")
     image_provider = MmapImageProvider(cache_queue_length=2, data_file_path=settings.mmap_file_path, shape=shape)
 
-    min_cutoff, slope, d_min_cutoff = 1.0, 4.0, 1.0
+    min_cutoff, slope, d_min_cutoff = 1.0, 1.0, 1.0
     filter = {
         'left_hand_local':  OneEuroFilter(min_cutoff, slope, d_min_cutoff),
         'left_hand_world':  OneEuroFilter(min_cutoff, slope, d_min_cutoff),
@@ -50,6 +50,7 @@ if __name__ == "__main__":
         'face_landmark':    OneEuroFilter(min_cutoff, slope, d_min_cutoff)
         }
     if settings.enable_pose_inference:
+        min_cutoff, slope = 0.08, 0.5
         filter['pose_local'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
         filter['pose_world'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
 
