@@ -27,87 +27,114 @@ def pack_hand_landmarks(raw_landmarks) -> LandmarkList:
     return local, world
 
 def extract_hand_landmarks(hand_results):
-    left_hand_landmarks = None
-    right_hand_landmarks = None
+    """
+    Extract hand landmarks prioritizing temporal consistency over detection labels.
+    """
+    left_out = None
+    right_out = None
 
-    if hand_results == None:
-        return [left_hand_landmarks, right_hand_landmarks]
+    if hand_results is None or not hand_results.handedness:
+        return [None, None]
 
-    num_hands = len(hand_results.handedness)
-    if num_hands >= 2:
-        category_name_0 = hand_results.handedness[0][0].category_name
-        category_name_1 = hand_results.handedness[1][0].category_name
-
-        if category_name_0 != category_name_1:
-            # Case: Both Left and Right hands are detected
-            left_i, right_i = [0, 1] if category_name_0 == 'Left' else [1, 0]
-            left_hand_landmarks = {
-                'local_landmark': hand_results.hand_landmarks[left_i],
-                'world_landmark': hand_results.hand_world_landmarks[left_i],
-                'confidence'    : hand_results.handedness[left_i][0].score,
-            }
-
-            right_hand_landmarks = {
-                'local_landmark': hand_results.hand_landmarks[right_i],
-                'world_landmark': hand_results.hand_world_landmarks[right_i],
-                'confidence'    : hand_results.handedness[right_i][0].score,
-            }
-
-        else:
-            # Case: Duplicate labels detected (e.g., two "Left" hands)
-            handedness = category_name_0
-            best_i = select_closest_index(handedness, hand_results)
-
-            target_data = {
-                'local_landmark': hand_results.hand_landmarks[best_i],
-                'world_landmark': hand_results.hand_world_landmarks[best_i],
-                'confidence': hand_results.handedness[best_i][0].score
-            }
-
-            if handedness == 'Left':
-                left_hand_landmarks = target_data
-            else:
-                right_hand_landmarks = target_data
-
-    elif num_hands >= 1:
-        is_left = hand_results.handedness[0][0].category_name == 'Left'
-        target_data = {
-            'local_landmark': hand_results.hand_landmarks[0],
-            'world_landmark': hand_results.hand_world_landmarks[0],
-            'confidence': hand_results.handedness[0][0].score
+    num_detected  = len(hand_results.handedness)
+    cache_l = get_valid_cache('Left')
+    cache_r = get_valid_cache('Right')
+    detected_hands = [
+        {
+            'local_landmark': hand_results.hand_landmarks[i],
+            'world_landmark': hand_results.hand_world_landmarks[i],
+            'confidence': hand_results.handedness[i][0].score,
+            'label': hand_results.handedness[i][0].category_name
         }
-        if is_left:
-            left_hand_landmarks = target_data
+        for i in range(num_detected )
+    ]
+
+    if num_detected  >= 2:
+        h0, h1 = detected_hands[0], detected_hands[1]
+
+        # Scenario: Both caches are valid - use distance to decide assignment
+        if cache_l and cache_r:
+            d0_l = calculate_l1_dist(h0['world_landmark'], cache_l['world_landmark'])
+            d0_r = calculate_l1_dist(h0['world_landmark'], cache_r['world_landmark'])
+            d1_l = calculate_l1_dist(h1['world_landmark'], cache_l['world_landmark'])
+            d1_r = calculate_l1_dist(h1['world_landmark'], cache_r['world_landmark'])
+
+            if (d0_l + d1_r) <= (d0_r + d1_l):
+                left_out, right_out = h0, h1
+            else:
+                left_out, right_out = h1, h0
+
+        # Scenario: Only one cache is valid
+        elif cache_l or cache_r:
+            target_side = 'Left' if cache_l else 'Right'
+            ref_pts = cache_l['world_landmark'] if cache_l else cache_r['world_landmark']
+
+            d0 = calculate_l1_dist(h0['world_landmark'], ref_pts)
+            d1 = calculate_l1_dist(h1['world_landmark'], ref_pts)
+
+            if target_side == 'Left':
+                left_out, right_out = (h0, h1) if d0 <= d1 else (h1, h0)
+            else:
+                right_out, left_out = (h0, h1) if d0 <= d1 else (h1, h0)
+
+        # Scenario: No valid cache - fallback to detection labels
         else:
-            right_hand_landmarks = target_data
+            if h0['label'] != h1['label']:
+                left_out, right_out = (h0, h1) if h0['label'] == 'Left' else (h1, h0)
+            else:
+                # Same labels and no cache: use confidence
+                left_out, right_out = (h0, h1) if h0['confidence'] >= h1['confidence'] else (h1, h0)
+                if h0['label'] == 'Right':
+                    left_out, right_out = right_out, left_out
 
-    update_hand_cache('Left', left_hand_landmarks)
-    update_hand_cache('Right', right_hand_landmarks)
+    elif num_detected  == 1:
+        h0 = detected_hands[0]
 
-    return [left_hand_landmarks, right_hand_landmarks]
+        if cache_l and cache_r:
+            d0_l = calculate_l1_dist(h0['world_landmark'], cache_l['world_landmark'])
+            d0_r = calculate_l1_dist(h0['world_landmark'], cache_r['world_landmark'])
 
+            closer_to_left = d0_l < d0_r
+            min_dist = d0_l if closer_to_left else d0_r
 
-def select_closest_index(handedness, hand_results):
-    """
-    Select the index closest to the cached landmarks using L1 norm when
-    multiple hands share the same label. If no valid cache exists,
-    the hand with the higher confidence score is selected.
-    """
-    prev_data = get_valid_cache(handedness)
-    # If no cache is available, select the one with the higher confidence score
-    if prev_data is None:
-        return 0 if hand_results.handedness[0][0].score >= hand_results.handedness[1][0].score else 1
+            is_conflict = (closer_to_left and h0['label'] == 'Right') or (not closer_to_left and h0['label'] == 'Left')
+            is_too_far = min_dist > MAX_MOVE_DISTANCE
 
-    def calculate_l1(curr_idx):
-        curr_landmarks = hand_results.hand_world_landmarks[curr_idx]
-        prev_landmarks = prev_data['world_landmark']
-        return sum(abs(c.x - p.x) + abs(c.y - p.y) + abs(c.z - p.z) for c, p in zip(curr_landmarks, prev_landmarks))
+            if is_conflict or is_too_far:
+                return [None, None]         # This results is probably misinferenced
 
-    dist0 = calculate_l1(0)
-    dist1 = calculate_l1(1)
+            if closer_to_left:
+                left_out = h0
+            else:
+                right_out = h0
 
-    return 0 if dist0 <= dist1 else 1
+        elif cache_l or cache_r:
+            active_cache = cache_l if cache_l else cache_r
+            active_side = 'Left' if cache_l else 'Right'
+            dist = calculate_l1_dist(h0['world_landmark'], active_cache['world_landmark'])
 
+            if h0['label'] == active_side and dist <= MAX_MOVE_DISTANCE:
+                if active_side == 'Left': left_out = h0
+                else: right_out = h0
+            else:
+                return [None, None]
+
+        else:
+            # Fallback to label
+            if h0['label'] == 'Left':
+                left_out = h0
+            else:
+                right_out = h0
+
+    update_hand_cache('Left', left_out)
+    update_hand_cache('Right', right_out)
+
+    return [left_out, right_out]
+
+def calculate_l1_dist(landmarks_1, landmarks_2):
+    """Calculate L1 distance between two sets of landmarks."""
+    return sum(abs(c.x - p.x) + abs(c.y - p.y) + abs(c.z - p.z)
+               for c, p in zip(landmarks_1, landmarks_2))
 
 # Global cache for hand landmarks
 HAND_CACHE = {
@@ -115,21 +142,17 @@ HAND_CACHE = {
     'Right': {'data': None, 'timestamp': 0}
 }
 
-# Cache expiration threshold in seconds
-CACHE_EXPIRATION = 0.5
+CACHE_EXPIRATION = 0.2  # Cache expiration threshold in seconds
+MAX_MOVE_DISTANCE = 0.25   # Threshold for jitter or sudden jumps
 
 def update_hand_cache(handedness, hand_landmarks):
-    """
-    Update the cache only when valid landmark data is provided.
-    """
+    """Update the cache only when valid landmark data is provided."""
     if hand_landmarks is not None:
         HAND_CACHE[handedness]['data'] = hand_landmarks
         HAND_CACHE[handedness]['timestamp'] = time.time()
 
 def get_valid_cache(handedness):
-    """
-    Retrieve the cache if it exists and has not expired.
-    """
+    """Retrieve the cache if it exists and has not expired."""
     cache = HAND_CACHE[handedness]
     if cache['data'] is not None and (time.time() - cache['timestamp']) < CACHE_EXPIRATION:
         return cache['data']
