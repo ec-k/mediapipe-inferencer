@@ -24,8 +24,8 @@ class HandResult:
         self.__left_hand = LandmarkResult()
         self.__right_hand = LandmarkResult()
 
-    def update(self, raw_results):
-        [left_hand_landmarks, right_hand_landmarks] = pack_to_landmark.extract_hand_landmarks(raw_results)
+    def update(self, raw_hand_results, raw_pose_results):
+        [left_hand_landmarks, right_hand_landmarks] = pack_to_landmark.extract_hand_landmarks(raw_hand_results, raw_pose_results)
         if left_hand_landmarks is not None and len(left_hand_landmarks)>0:
             self.__left_hand.local, self.__left_hand.world = pack_to_landmark.pack_hand_landmarks(left_hand_landmarks)
         if right_hand_landmarks is not None and len(right_hand_landmarks)>0:
@@ -78,7 +78,7 @@ class HolisticResults:
             if len(raw_pose.pose_world_landmarks)>0:
                 self.__pose_result.world = pack_to_landmark.pack_landmarks(raw_pose.pose_world_landmarks[0])
         if raw_hand is not None:
-            self.__hand_result.update(raw_hand)
+            self.__hand_result.update(raw_hand, raw_pose)
         if raw_face is not None:
             self.__face_results.update(raw_face)
 
