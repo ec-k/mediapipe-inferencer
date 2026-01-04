@@ -43,6 +43,7 @@ if __name__ == "__main__":
         'face_landmark':    OneEuroFilter(min_cutoff, slope, d_min_cutoff)
         }
     if settings.enable_pose_inference:
+        min_cutoff, slope = 0.08, 0.5
         filter['pose_local'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
         filter['pose_world'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
 
