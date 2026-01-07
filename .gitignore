@@ -179,3 +179,5 @@ models/
 # build by nuitka
 inference_by_mmap.build/
 inference_by_mmap.dist/
+inference_by_webcam.build/
+inference_by_webcam.dist/
