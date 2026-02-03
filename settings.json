@@ -1,3 +1,7 @@
 {
-  "models_dir": "./models"
+  "models_dir": "./models",
+  "pose_sender": {
+    "host": "localhost",
+    "port": 9001
+  }
 }

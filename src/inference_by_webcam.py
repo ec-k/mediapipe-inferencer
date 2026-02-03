@@ -43,11 +43,12 @@ if __name__ == "__main__":
 
     settings = create_settings_from_args()
 
-    pose_sender = HolisticPoseSender("localhost", 9001)
-    pose_sender.connect()
-
     base_dir = get_base_directory()
     config = load_config(base_dir)
+
+    pose_sender = HolisticPoseSender(config["pose_sender"]["host"], config["pose_sender"]["port"])
+    pose_sender.connect()
+
     models_dir = str(base_dir / config["models_dir"])
     holistic_detector = DetectorHandler(
         pose=PoseDetector(models_dir + "/pose_landmarker_full.task", 0.8) if settings.enable_pose_inference else None,
