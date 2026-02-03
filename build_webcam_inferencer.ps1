@@ -1,1 +1,1 @@
-uv run nuitka --standalone .\src\inference_by_webcam.py
+uv run nuitka --standalone --include-data-dir=./models=models --include-data-files=./settings.json=settings.json .\src\inference_by_webcam.py

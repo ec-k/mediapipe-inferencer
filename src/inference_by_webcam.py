@@ -10,6 +10,26 @@ import time
 import copy
 from pathlib import Path
 import signal
+import sys
+import json
+
+
+def get_base_directory() -> Path:
+    try:
+        # Nuitka compiled
+        return Path(__nuitka_binary_dir)
+    except NameError:
+        # Development environment
+        return Path(__file__).parent.parent
+
+
+def load_config(base_dir: Path) -> dict:
+    settings_path = base_dir / "settings.json"
+    if not settings_path.exists():
+        print(f"Error: settings.json not found at {settings_path}", file=sys.stderr)
+        sys.exit(1)
+    with open(settings_path) as f:
+        return json.load(f)
 
 running = True
 
@@ -26,11 +46,13 @@ if __name__ == "__main__":
     pose_sender = HolisticPoseSender("localhost", 9001)
     pose_sender.connect()
 
-    root_directory = str(Path(__file__).parent.parent)
+    base_dir = get_base_directory()
+    config = load_config(base_dir)
+    models_dir = str(base_dir / config["models_dir"])
     holistic_detector = DetectorHandler(
-        pose=PoseDetector(root_directory + "/models/pose_landmarker_full.task", 0.8) if settings.enable_pose_inference else None,
-        hand=HandDetector(root_directory + "/models/hand_landmarker.task", 0.8),
-        face=FaceDetector(root_directory + "/models/face_landmarker.task", 0.8)
+        pose=PoseDetector(models_dir + "/pose_landmarker_full.task", 0.8) if settings.enable_pose_inference else None,
+        hand=HandDetector(models_dir + "/hand_landmarker.task", 0.8),
+        face=FaceDetector(models_dir + "/face_landmarker.task", 0.8)
     )
 
     image_provider = WebcamImageProvider(cache_queue_length=2, device_index=0)
