@@ -1,6 +1,6 @@
 import numpy as np
-import proto_generated.holistic_landmarks_pb2 as holistic_lm_pb2
-from proto_generated import landmark_pb2
+import proto_generated.human_landmarks.holistic_landmarks_pb2 as holistic_lm_pb2
+from proto_generated.human_landmarks import landmark_pb2
 from mediapipe_inferencer_core.data_class.result_data import HolisticResults
 from mediapipe_inferencer_core.data_class import LandmarkList
 
