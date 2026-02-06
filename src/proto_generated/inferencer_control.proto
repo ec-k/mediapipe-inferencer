@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package violetmarionette.shared;
+
+// Pose estimation control service
+service EstimationControl {
+  // Select camera to use
+  rpc SelectCamera(CameraSelection) returns (OperationResult);
+
+  // Enable/disable preview (shared memory)
+  rpc SetPreviewEnabled(PreviewSetting) returns (OperationResult);
+
+  // Set landmark visualization settings
+  rpc SetLandmarkVisualization(LandmarkVisualizationSettings) returns (OperationResult);
+
+  // Get current status
+  rpc GetStatus(Empty) returns (EstimationStatus);
+
+  // Start estimation
+  rpc Start(Empty) returns (OperationResult);
+
+  // Stop estimation
+  rpc Stop(Empty) returns (OperationResult);
+}
+
+message Empty {}
+
+message CameraSelection {
+  int32 device_index = 1;
+}
+
+message PreviewSetting {
+  bool enabled = 1;
+}
+
+message LandmarkVisualizationSettings {
+  bool pose_enabled = 1;
+  bool hands_enabled = 2;
+  bool face_enabled = 3;
+}
+
+message OperationResult {
+  bool success = 1;
+  string error_message = 2;  // Empty if success
+}
+
+message EstimationStatus {
+  bool is_running = 1;
+  int32 selected_camera_index = 2;
+  bool preview_enabled = 3;
+  LandmarkVisualizationSettings landmark_visualization = 4;
+}
