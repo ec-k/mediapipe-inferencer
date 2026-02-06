@@ -1,7 +1,7 @@
 from mediapipe_inferencer_core.network import HolisticPoseSender, EstimationState, EstimationControlServer
 from mediapipe_inferencer_core.detector import DetectorHandler, PoseDetector, HandDetector, FaceDetector
 from mediapipe_inferencer_core import visualizer
-from mediapipe_inferencer_core.image_provider import WebcamImageProvider
+from mediapipe_inferencer_core.image_provider import WebcamImageProvider, MmapImageWriter
 from mediapipe_inferencer_core.filter import OneEuroFilter
 from app_arg_parser import create_settings_from_args
 
@@ -89,6 +89,13 @@ if __name__ == "__main__":
     image_provider = WebcamImageProvider(cache_queue_length=2, device_index=estimation_state.get_camera_index())
     filters = create_filters(settings.enable_pose_inference)
 
+    # Initialize preview writer if path is specified
+    preview_writer = None
+    if settings.preview_mmap_path:
+        preview_shape = (720, 1280, 4)  # BGRA format
+        preview_writer = MmapImageWriter(settings.preview_mmap_path, preview_shape)
+        print(f"Preview mmap writer initialized: {settings.preview_mmap_path}")
+
     # Auto-start estimation
     estimation_state.set_running(True)
 
@@ -145,20 +152,27 @@ if __name__ == "__main__":
         pose_sender.send_holistic_landmarks(results)
 
         # Visualize resulted landmarks
+        viz_settings = estimation_state.get_landmark_visualization()
+        annotated_image = image
+        if results.pose is not None and viz_settings.pose_enabled:
+            annotated_image = visualizer.draw_pose_landmarks_on_image(annotated_image, results.pose)
+        if results.hand is not None and viz_settings.hands_enabled:
+            annotated_image = visualizer.draw_hand_landmarks_on_image(annotated_image, results.hand)
+        if results.face is not None and viz_settings.face_enabled:
+            annotated_image = visualizer.draw_face_landmarks_on_image(annotated_image, results.face)
+
         if settings.enable_visualization_window:
-            viz_settings = estimation_state.get_landmark_visualization()
-            annotated_image = image
-            if results.pose is not None and viz_settings.pose_enabled:
-                annotated_image = visualizer.draw_pose_landmarks_on_image(annotated_image, results.pose)
-            if results.hand is not None and viz_settings.hands_enabled:
-                annotated_image = visualizer.draw_hand_landmarks_on_image(annotated_image, results.hand)
-            if results.face is not None and viz_settings.face_enabled:
-                annotated_image = visualizer.draw_face_landmarks_on_image(annotated_image, results.face)
             cv2.imshow('MediaPipe Landmarks', cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB))
+
+        # Write to shared memory if preview is enabled
+        if preview_writer and estimation_state.get_preview_enabled():
+            preview_writer.write(annotated_image)
 
         time.sleep(1/60)
 
     # Cleanup
     grpc_server.stop()
     image_provider.release_capture()
+    if preview_writer:
+        preview_writer.close()
     cv2.destroyAllWindows()
