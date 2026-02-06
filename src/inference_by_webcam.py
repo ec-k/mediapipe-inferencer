@@ -1,4 +1,4 @@
-from mediapipe_inferencer_core.network import HolisticPoseSender
+from mediapipe_inferencer_core.network import HolisticPoseSender, EstimationState, EstimationControlServer
 from mediapipe_inferencer_core.detector import DetectorHandler, PoseDetector, HandDetector, FaceDetector
 from mediapipe_inferencer_core import visualizer
 from mediapipe_inferencer_core.image_provider import WebcamImageProvider
@@ -31,11 +31,29 @@ def load_config(base_dir: Path) -> dict:
     with open(settings_path) as f:
         return json.load(f)
 
+
+def create_filters(enable_pose: bool):
+    min_cutoff, slope, d_min_cutoff = 1.0, 4.0, 1.0
+    filters = {
+        'left_hand_local':  OneEuroFilter(min_cutoff, slope, d_min_cutoff),
+        'left_hand_world':  OneEuroFilter(min_cutoff, slope, d_min_cutoff),
+        'right_hand_local': OneEuroFilter(min_cutoff, slope, d_min_cutoff),
+        'right_hand_world': OneEuroFilter(min_cutoff, slope, d_min_cutoff),
+        'face_landmark':    OneEuroFilter(min_cutoff, slope, d_min_cutoff)
+    }
+    if enable_pose:
+        min_cutoff, slope = 0.08, 0.5
+        filters['pose_local'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
+        filters['pose_world'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
+    return filters
+
+
 running = True
 
 def handle_sigint(signum, frame):
     global running
     running = False
+
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, handle_sigint)
@@ -45,6 +63,18 @@ if __name__ == "__main__":
 
     base_dir = get_base_directory()
     config = load_config(base_dir)
+
+    # Initialize estimation state and gRPC server
+    estimation_state = EstimationState()
+    estimation_state.set_landmark_visualization(
+        pose=settings.enable_pose_inference,
+        hands=True,
+        face=True
+    )
+
+    grpc_server = EstimationControlServer(estimation_state, settings.grpc_port)
+    grpc_server.start()
+    print(f"gRPC server started on port {settings.grpc_port}")
 
     pose_sender = HolisticPoseSender(config["pose_sender"]["host"], config["pose_sender"]["port"])
     pose_sender.connect()
@@ -56,24 +86,38 @@ if __name__ == "__main__":
         face=FaceDetector(models_dir + "/face_landmarker.task", 0.8)
     )
 
-    image_provider = WebcamImageProvider(cache_queue_length=2, device_index=0)
-    min_cutoff, slope, d_min_cutoff = 1.0, 4.0, 1.0
-    filter = {
-        'left_hand_local':  OneEuroFilter(min_cutoff, slope, d_min_cutoff),
-        'left_hand_world':  OneEuroFilter(min_cutoff, slope, d_min_cutoff),
-        'right_hand_local': OneEuroFilter(min_cutoff, slope, d_min_cutoff),
-        'right_hand_world': OneEuroFilter(min_cutoff, slope, d_min_cutoff),
-        'face_landmark':    OneEuroFilter(min_cutoff, slope, d_min_cutoff)
-        }
-    if settings.enable_pose_inference:
-        min_cutoff, slope = 0.08, 0.5
-        filter['pose_local'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
-        filter['pose_world'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
+    image_provider = WebcamImageProvider(cache_queue_length=2, device_index=estimation_state.get_camera_index())
+    filters = create_filters(settings.enable_pose_inference)
+
+    # Auto-start estimation
+    estimation_state.set_running(True)
 
     while running:
-        # Break in key Ctrl+C pressed
+        # Check for stop request
+        if estimation_state.stop_requested.is_set():
+            estimation_state.set_running(False)
+
+        # Check for start request
+        if estimation_state.start_requested.is_set():
+            estimation_state.set_running(True)
+
+        # Handle camera change
+        if estimation_state.camera_change_requested.is_set():
+            image_provider.release_capture()
+            image_provider = WebcamImageProvider(
+                cache_queue_length=2,
+                device_index=estimation_state.get_camera_index()
+            )
+            estimation_state.acknowledge_camera_change()
+
+        # Break on ESC key
         if cv2.waitKey(5) & 0xFF == 27:
             break
+
+        # Skip inference if not running
+        if not estimation_state.is_running:
+            time.sleep(1/60)
+            continue
 
         # Inference pose
         image_provider.update()
@@ -84,31 +128,37 @@ if __name__ == "__main__":
 
         if holistic_detector.results is None:
             continue
+
         # Filtering
         results = copy.deepcopy(holistic_detector.results)
         time_s = results.time
-        results.hand.left.local = filter['left_hand_local'].filter(results.hand.left.local, time_s)
-        results.hand.left.world = filter['left_hand_world'].filter(results.hand.left.world, time_s)
-        results.hand.right.local = filter['right_hand_local'].filter(results.hand.right.local, time_s)
-        results.hand.right.world = filter['right_hand_world'].filter(results.hand.right.world, time_s)
-        results.face.landmarks = filter['face_landmark'].filter(results.face.landmarks, time_s)
+        results.hand.left.local = filters['left_hand_local'].filter(results.hand.left.local, time_s)
+        results.hand.left.world = filters['left_hand_world'].filter(results.hand.left.world, time_s)
+        results.hand.right.local = filters['right_hand_local'].filter(results.hand.right.local, time_s)
+        results.hand.right.world = filters['right_hand_world'].filter(results.hand.right.world, time_s)
+        results.face.landmarks = filters['face_landmark'].filter(results.face.landmarks, time_s)
         if settings.enable_pose_inference:
-            results.pose.local = filter['pose_local'].filter(results.pose.local, time_s)
-            results.pose.world = filter['pose_world'].filter(results.pose.world, time_s)
+            results.pose.local = filters['pose_local'].filter(results.pose.local, time_s)
+            results.pose.world = filters['pose_world'].filter(results.pose.world, time_s)
 
         # Send results to solver app
         pose_sender.send_holistic_landmarks(results)
 
         # Visualize resulted landmarks
         if settings.enable_visualization_window:
+            viz_settings = estimation_state.get_landmark_visualization()
             annotated_image = image
-            if results.pose is not None:
+            if results.pose is not None and viz_settings.pose_enabled:
                 annotated_image = visualizer.draw_pose_landmarks_on_image(annotated_image, results.pose)
-            if results.hand is not None:
+            if results.hand is not None and viz_settings.hands_enabled:
                 annotated_image = visualizer.draw_hand_landmarks_on_image(annotated_image, results.hand)
-            if results.face is not None:
+            if results.face is not None and viz_settings.face_enabled:
                 annotated_image = visualizer.draw_face_landmarks_on_image(annotated_image, results.face)
-            # cv2.imshow('MediaPipe Landmarks', cv2.cvtColor(cv2.flip(annotated_image, 1), cv2.COLOR_BGR2RGB))
-            cv2.imshow('MediaPipe Landmarks', cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB)) # no-flipping
+            cv2.imshow('MediaPipe Landmarks', cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB))
+
         time.sleep(1/60)
+
+    # Cleanup
+    grpc_server.stop()
     image_provider.release_capture()
+    cv2.destroyAllWindows()
