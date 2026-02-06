@@ -35,7 +35,13 @@ Follow these steps to run the project:
     uv sync
     ```
 
-2.  **Run Script:**
+2.  **Import MediaPipe Models:**
+
+    Download the models used for inference from the [MediaPipe page](https://ai.google.dev/edge/mediapipe/solutions/guide) and place them under `models/`.
+
+    Alternatively, run `download_models.ps1`.
+
+3.  **Run Script:**
     Execute one of the following scripts:
 
     - `src/inference_by_mmap.py`:

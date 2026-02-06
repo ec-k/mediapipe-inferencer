@@ -29,14 +29,20 @@
 
 1.  **依存関係のインストール:**
 
-    ```bash
-    uv sync
-    ```
+```bash
+uv sync
+```
 
-2.  **スクリプトの実行:**
+2. **MediaPipeのモデルをインポート**
+
+[MediaPipeのページ](https://ai.google.dev/edge/mediapipe/solutions/guide)から，推定に使用するモデルをダウンロードし，`models/`以下に配置してください．
+
+あるいは，`download_models.ps1` を実行してください．
+
+3.  **スクリプトの実行:**
     以下のいずれかのスクリプトを実行してください．
 
-    - `src/inference_by_mmap.py`:
-      共有メモリに書き込まれた画像を読み取り，姿勢推定を行います．Kinect との連携を想定しており，デフォルトでは MediaPipe Pose の推定は行いません．必要に応じて追加してください．
-    - `src/inference_by_webcam.py`:
-      PC に接続されたカメラにアクセスし，姿勢推定を行います．MediaPipe のみで姿勢推定を完結させる場合に適しています．
+- `src/inference_by_mmap.py`:
+  共有メモリに書き込まれた画像を読み取り，姿勢推定を行います．Kinect との連携を想定しており，デフォルトでは MediaPipe Pose の推定は行いません．必要に応じて追加してください．
+- `src/inference_by_webcam.py`:
+  PC に接続されたカメラにアクセスし，姿勢推定を行います．MediaPipe のみで姿勢推定を完結させる場合に適しています．
