@@ -1,7 +1,8 @@
 from mediapipe_inferencer_core.network import HolisticPoseSender, EstimationState, EstimationControlServer
 from mediapipe_inferencer_core.detector import DetectorHandler, PoseDetector, HandDetector, FaceDetector
 from mediapipe_inferencer_core import visualizer
-from mediapipe_inferencer_core.image_provider import WebcamImageProvider, MmapImageWriter
+from mediapipe_inferencer_core.image_provider import WebcamImageProvider
+from mediapipe_inferencer_core.image_writer import MmapImageWriter
 from mediapipe_inferencer_core.filter import OneEuroFilter
 from webcam_arg_parser import create_settings_from_args
 
