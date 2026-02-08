@@ -32,7 +32,7 @@ def load_config(base_dir: Path) -> dict:
         return json.load(f)
 
 
-def create_filters(enable_pose: bool):
+def create_filters():
     min_cutoff, slope, d_min_cutoff = 1.0, 4.0, 1.0
     filters = {
         'left_hand_local':  OneEuroFilter(min_cutoff, slope, d_min_cutoff),
@@ -41,10 +41,9 @@ def create_filters(enable_pose: bool):
         'right_hand_world': OneEuroFilter(min_cutoff, slope, d_min_cutoff),
         'face_landmark':    OneEuroFilter(min_cutoff, slope, d_min_cutoff)
     }
-    if enable_pose:
-        min_cutoff, slope = 0.08, 0.5
-        filters['pose_local'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
-        filters['pose_world'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
+    min_cutoff, slope = 0.08, 0.5
+    filters['pose_local'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
+    filters['pose_world'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
     return filters
 
 
@@ -67,7 +66,7 @@ if __name__ == "__main__":
     # Initialize estimation state and gRPC server
     estimation_state = EstimationState()
     estimation_state.set_landmark_visualization(
-        pose=settings.enable_pose_inference,
+        pose=True,
         hands=True,
         face=True
     )
@@ -81,13 +80,13 @@ if __name__ == "__main__":
 
     models_dir = str(base_dir / config["models_dir"])
     holistic_detector = DetectorHandler(
-        pose=PoseDetector(models_dir + "/pose_landmarker_full.task", 0.8) if settings.enable_pose_inference else None,
+        pose=PoseDetector(models_dir + "/pose_landmarker_full.task", 0.8),
         hand=HandDetector(models_dir + "/hand_landmarker.task", 0.8),
         face=FaceDetector(models_dir + "/face_landmarker.task", 0.8)
     )
 
     image_provider = WebcamImageProvider(cache_queue_length=2, device_index=estimation_state.get_camera_index())
-    filters = create_filters(settings.enable_pose_inference)
+    filters = create_filters()
 
     # Initialize preview writer if path is specified
     preview_writer = None
@@ -139,14 +138,13 @@ if __name__ == "__main__":
         # Filtering
         results = copy.deepcopy(holistic_detector.results)
         time_s = results.time
+        results.pose.local = filters['pose_local'].filter(results.pose.local, time_s)
+        results.pose.world = filters['pose_world'].filter(results.pose.world, time_s)
         results.hand.left.local = filters['left_hand_local'].filter(results.hand.left.local, time_s)
         results.hand.left.world = filters['left_hand_world'].filter(results.hand.left.world, time_s)
         results.hand.right.local = filters['right_hand_local'].filter(results.hand.right.local, time_s)
         results.hand.right.world = filters['right_hand_world'].filter(results.hand.right.world, time_s)
         results.face.landmarks = filters['face_landmark'].filter(results.face.landmarks, time_s)
-        if settings.enable_pose_inference:
-            results.pose.local = filters['pose_local'].filter(results.pose.local, time_s)
-            results.pose.world = filters['pose_world'].filter(results.pose.world, time_s)
 
         # Send results to solver app
         pose_sender.send_holistic_landmarks(results)
