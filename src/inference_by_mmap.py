@@ -3,7 +3,7 @@ from mediapipe_inferencer_core.detector import DetectorHandler, HandDetector, Fa
 from mediapipe_inferencer_core import visualizer
 from mediapipe_inferencer_core.image_provider import MmapImageProvider
 from mediapipe_inferencer_core.filter import OneEuroFilter
-from app_arg_parser import create_settings_from_args
+from mmap_arg_parser import create_settings_from_args
 
 from pathlib import Path
 import cv2

@@ -3,7 +3,7 @@ from mediapipe_inferencer_core.detector import DetectorHandler, PoseDetector, Ha
 from mediapipe_inferencer_core import visualizer
 from mediapipe_inferencer_core.image_provider import WebcamImageProvider, MmapImageWriter
 from mediapipe_inferencer_core.filter import OneEuroFilter
-from app_arg_parser import create_settings_from_args
+from webcam_arg_parser import create_settings_from_args
 
 import cv2
 import time
