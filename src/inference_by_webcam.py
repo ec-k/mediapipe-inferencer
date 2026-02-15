@@ -92,7 +92,8 @@ if __name__ == "__main__":
     # Initialize preview writer if path is specified
     preview_writer = None
     if settings.preview_mmap_path:
-        preview_shape = (720, 1280, 4)  # BGRA format
+        channels = 4 if settings.preview_mmap_alpha else 3
+        preview_shape = (720, 1280, channels)
         preview_writer = MmapImageWriter(settings.preview_mmap_path, preview_shape)
         print(f"Preview mmap writer initialized: {settings.preview_mmap_path}")
 

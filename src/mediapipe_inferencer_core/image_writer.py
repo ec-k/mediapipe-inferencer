@@ -36,6 +36,7 @@ class MmapImageWriter:
         """Actual write operation."""
         if image.shape[:2] != self._shape[:2]:
             image = cv2.resize(image, (self._shape[1], self._shape[0]))
+        # Convert BGR to BGRA if mmap expects 4 channels but input has 3 channels
         if len(self._shape) == 3 and self._shape[2] == 4 and len(image.shape) == 3 and image.shape[2] == 3:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2BGRA)
         self._mmap[:] = image
