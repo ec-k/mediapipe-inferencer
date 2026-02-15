@@ -1,20 +1,43 @@
 from queue import Queue
+import struct
+import time
 import numpy as np
 import cv2
 
 
 class MmapImageWriter:
-    """Write images to shared memory via memory-mapped file in a background thread."""
+    """Write images to shared memory via memory-mapped file in a background thread.
+
+    File format (compatible with Unity SharedMemoryFrameReader):
+        Header (28 bytes):
+            - frameSequence: uint32 (offset 0)
+            - timestamp: int64 (offset 4)
+            - width: uint32 (offset 12)
+            - height: uint32 (offset 16)
+            - pixelFormat: uint32 (offset 20) - 0 = RGB24
+            - dataSize: uint32 (offset 24)
+        Data:
+            - RGB24 pixel data (offset 28)
+    """
+
+    HEADER_SIZE = 28
+    PIXEL_FORMAT_RGB24 = 0
 
     def __init__(self, file_path: str, shape: tuple, dtype: str = 'uint8'):
         import threading
 
-        self._shape = shape
+        height, width = shape[:2]
+        self._width = width
+        self._height = height
+        self._data_size = width * height * 3  # RGB24
+        self._total_size = self.HEADER_SIZE + self._data_size
+        self._frame_sequence = 0
+
         self._mmap = np.memmap(
             file_path,
             dtype=dtype,
             mode='w+',
-            shape=shape
+            shape=(self._total_size,)
         )
         self._queue = Queue(maxsize=1)
         self._running = True
@@ -34,12 +57,32 @@ class MmapImageWriter:
 
     def _write_internal(self, image: np.ndarray) -> None:
         """Actual write operation."""
-        if image.shape[:2] != self._shape[:2]:
-            image = cv2.resize(image, (self._shape[1], self._shape[0]))
-        # Convert BGR to BGRA if mmap expects 4 channels but input has 3 channels
-        if len(self._shape) == 3 and self._shape[2] == 4 and len(image.shape) == 3 and image.shape[2] == 3:
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2BGRA)
-        self._mmap[:] = image
+        # Resize if needed
+        if image.shape[0] != self._height or image.shape[1] != self._width:
+            image = cv2.resize(image, (self._width, self._height))
+
+        # Convert BGR to RGB (OpenCV uses BGR, Unity expects RGB)
+        if len(image.shape) == 3 and image.shape[2] >= 3:
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        # Increment frame sequence
+        self._frame_sequence += 1
+        timestamp = int(time.time() * 1000)  # milliseconds
+
+        # Write header: frameSequence(I), timestamp(q), width(I), height(I), pixelFormat(I), dataSize(I)
+        header = struct.pack(
+            '<IqIIII',
+            self._frame_sequence,
+            timestamp,
+            self._width,
+            self._height,
+            self.PIXEL_FORMAT_RGB24,
+            self._data_size
+        )
+        self._mmap[:self.HEADER_SIZE] = np.frombuffer(header, dtype=np.uint8)
+
+        # Write pixel data
+        self._mmap[self.HEADER_SIZE:] = image.flatten()
         self._mmap.flush()
 
     def write(self, image: np.ndarray) -> None:
