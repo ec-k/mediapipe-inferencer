@@ -26,7 +26,7 @@ service EstimationControl {
 message Empty {}
 
 message CameraSelection {
-  int32 device_index = 1;
+  string device_name = 1;
 }
 
 message PreviewSetting {
@@ -46,7 +46,7 @@ message OperationResult {
 
 message EstimationStatus {
   bool is_running = 1;
-  int32 selected_camera_index = 2;
+  string selected_camera_name = 2;
   bool preview_enabled = 3;
   LandmarkVisualizationSettings landmark_visualization = 4;
 }

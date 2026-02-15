@@ -2,6 +2,22 @@ from abc import ABC, abstractclassmethod
 from queue import Queue
 import numpy as np
 import cv2
+from pygrabber.dshow_graph import FilterGraph
+
+
+def get_camera_devices() -> list[str]:
+    """Get list of available camera device names using DirectShow."""
+    graph = FilterGraph()
+    return graph.get_input_devices()
+
+
+def find_camera_index_by_name(device_name: str) -> int | None:
+    """Find camera index by device name. Returns None if not found."""
+    devices = get_camera_devices()
+    for index, name in enumerate(devices):
+        if name == device_name:
+            return index
+    return None
 
 class ImageProvider(ABC):
     def __init__(self, cache_queue_length):
@@ -30,7 +46,7 @@ class ImageProvider(ABC):
 class WebcamImageProvider(ImageProvider):
     def __init__(self, cache_queue_length, device_index):
         super().__init__(cache_queue_length)
-        self.__cap = cv2.VideoCapture(device_index)
+        self.__cap = cv2.VideoCapture(device_index, cv2.CAP_DSHOW)
     def _fetch_image(self):
         success, image = self.__cap.read()
         return image

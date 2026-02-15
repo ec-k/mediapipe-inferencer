@@ -1,7 +1,7 @@
 from mediapipe_inferencer_core.network import HolisticPoseSender, EstimationState, EstimationControlServer
 from mediapipe_inferencer_core.detector import DetectorHandler, PoseDetector, HandDetector, FaceDetector
 from mediapipe_inferencer_core import visualizer
-from mediapipe_inferencer_core.image_provider import WebcamImageProvider
+from mediapipe_inferencer_core.image_provider import WebcamImageProvider, find_camera_index_by_name, get_camera_devices
 from mediapipe_inferencer_core.image_writer import MmapImageWriter
 from mediapipe_inferencer_core.filter import OneEuroFilter
 from webcam_arg_parser import create_settings_from_args
@@ -86,7 +86,16 @@ if __name__ == "__main__":
         face=FaceDetector(models_dir + "/face_landmarker.task", 0.8)
     )
 
-    image_provider = WebcamImageProvider(cache_queue_length=2, device_index=estimation_state.get_camera_index())
+    # Get initial camera index (use first camera if not specified)
+    camera_devices = get_camera_devices()
+    initial_camera_name = estimation_state.get_camera_name()
+    if initial_camera_name and initial_camera_name in camera_devices:
+        initial_camera_index = camera_devices.index(initial_camera_name)
+    else:
+        initial_camera_index = 0
+        if camera_devices:
+            estimation_state.set_camera_name(camera_devices[0])
+    image_provider = WebcamImageProvider(cache_queue_length=2, device_index=initial_camera_index)
     filters = create_filters()
 
     # Initialize preview writer if path is specified
@@ -111,11 +120,17 @@ if __name__ == "__main__":
 
         # Handle camera change
         if estimation_state.camera_change_requested.is_set():
-            image_provider.release_capture()
-            image_provider = WebcamImageProvider(
-                cache_queue_length=2,
-                device_index=estimation_state.get_camera_index()
-            )
+            new_camera_name = estimation_state.get_camera_name()
+            new_camera_index = find_camera_index_by_name(new_camera_name)
+            if new_camera_index is not None:
+                image_provider.release_capture()
+                image_provider = WebcamImageProvider(
+                    cache_queue_length=2,
+                    device_index=new_camera_index
+                )
+                print(f"Camera changed to: {new_camera_name} (index {new_camera_index})")
+            else:
+                print(f"Camera not found: {new_camera_name}", file=sys.stderr)
             estimation_state.acknowledge_camera_change()
 
         # Break on ESC key
@@ -129,9 +144,9 @@ if __name__ == "__main__":
 
         # Inference pose
         image_provider.update()
-        image = cv2.cvtColor(image_provider.latest_frame, cv2.COLOR_RGBA2BGR)
-        if image is None:
+        if image_provider.latest_frame is None:
             continue
+        image = cv2.cvtColor(image_provider.latest_frame, cv2.COLOR_RGBA2BGR)
         holistic_detector.inference(image)
 
         if holistic_detector.results is None:

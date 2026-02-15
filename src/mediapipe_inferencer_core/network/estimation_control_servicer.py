@@ -10,7 +10,7 @@ class EstimationControlServicer(pb2_grpc.EstimationControlServicer):
         self._state = state
 
     def SelectCamera(self, request, context):
-        self._state.set_camera_index(request.device_index)
+        self._state.set_camera_name(request.device_name)
         return pb2.OperationResult(success=True)
 
     def SetPreviewEnabled(self, request, context):
@@ -29,7 +29,7 @@ class EstimationControlServicer(pb2_grpc.EstimationControlServicer):
         viz = self._state.get_landmark_visualization()
         return pb2.EstimationStatus(
             is_running=self._state.is_running,
-            selected_camera_index=self._state.get_camera_index(),
+            selected_camera_name=self._state.get_camera_name(),
             preview_enabled=self._state.get_preview_enabled(),
             landmark_visualization=pb2.LandmarkVisualizationSettings(
                 pose_enabled=viz.pose_enabled,

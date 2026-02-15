@@ -14,7 +14,7 @@ class EstimationState:
     """Thread-safe state management for estimation control."""
 
     is_running: bool = False
-    selected_camera_index: int = 0
+    selected_camera_name: str = ""
     preview_enabled: bool = False
     landmark_visualization: LandmarkVisualizationSettings = field(
         default_factory=LandmarkVisualizationSettings
@@ -50,15 +50,15 @@ class EstimationState:
             else:
                 self.stop_requested.clear()
 
-    def set_camera_index(self, index: int):
+    def set_camera_name(self, name: str):
         with self._lock:
-            if self.selected_camera_index != index:
-                self.selected_camera_index = index
+            if self.selected_camera_name != name:
+                self.selected_camera_name = name
                 self.camera_change_requested.set()
 
-    def get_camera_index(self) -> int:
+    def get_camera_name(self) -> str:
         with self._lock:
-            return self.selected_camera_index
+            return self.selected_camera_name
 
     def acknowledge_camera_change(self):
         self.camera_change_requested.clear()
