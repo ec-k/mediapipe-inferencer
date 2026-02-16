@@ -146,7 +146,7 @@ if __name__ == "__main__":
         image_provider.update()
         if image_provider.latest_frame is None:
             continue
-        image = cv2.cvtColor(image_provider.latest_frame, cv2.COLOR_RGBA2BGR)
+        image = cv2.cvtColor(image_provider.latest_frame, cv2.COLOR_BGRA2BGR)
         holistic_detector.inference(image)
 
         if holistic_detector.results is None:
