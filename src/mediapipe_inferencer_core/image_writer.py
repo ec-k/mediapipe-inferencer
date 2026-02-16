@@ -17,7 +17,7 @@ class MmapImageWriter:
             - pixelFormat: uint32 (offset 20) - 0 = RGB24
             - dataSize: uint32 (offset 24)
         Data:
-            - RGB24 pixel data (offset 28)
+            - BGR24 pixel data (offset 28) - Unity expects BGR despite RGB24 format
     """
 
     HEADER_SIZE = 28
@@ -61,9 +61,9 @@ class MmapImageWriter:
         if image.shape[0] != self._height or image.shape[1] != self._width:
             image = cv2.resize(image, (self._width, self._height))
 
-        # Convert BGR to RGB (OpenCV uses BGR, Unity expects RGB)
-        if len(image.shape) == 3 and image.shape[2] >= 3:
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # HACK: Unity's Texture2D.LoadRawTextureData expects BGR order despite
+        # TextureFormat.RGB24 specification. Do NOT convert to RGB here.
+        # See: SharedMemoryFrameReader.cs
 
         # Increment frame sequence
         self._frame_sequence += 1
