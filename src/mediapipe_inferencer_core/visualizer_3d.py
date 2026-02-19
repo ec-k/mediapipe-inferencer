@@ -2,6 +2,13 @@ import open3d as o3d
 import numpy as np
 from mediapipe_inferencer_core.data_class import LandmarkResult, HandResult
 
+# MediaPipe Pose landmark indices
+POSE_LEFT_WRIST = 15
+POSE_RIGHT_WRIST = 16
+
+# MediaPipe Hand landmark indices
+HAND_WRIST = 0
+
 # MediaPipe Pose connections (33 landmarks)
 POSE_CONNECTIONS = [
     (0, 1), (1, 2), (2, 3), (3, 7),      # Right eye
@@ -191,8 +198,10 @@ class Pose3DVisualizer:
             return
 
         # landmarks shape: (N, 4) -> [x, y, z, confidence]
+        # Flip X axis: remove mirror effect (MediaPipe X+ is subject's right)
         # Flip Y axis: MediaPipe is Y-down, Open3D is Y-up
         points = landmarks[:, :3].copy()
+        points[:, 0] = -points[:, 0]
         points[:, 1] = -points[:, 1]
         pcd.points = o3d.utility.Vector3dVector(points)
         pcd.paint_uniform_color(color)
@@ -205,8 +214,10 @@ class Pose3DVisualizer:
             lines.lines = o3d.utility.Vector2iVector([])
             return
 
+        # Flip X axis: remove mirror effect (MediaPipe X+ is subject's right)
         # Flip Y axis: MediaPipe is Y-down, Open3D is Y-up
         points = landmarks[:, :3].copy()
+        points[:, 0] = -points[:, 0]
         points[:, 1] = -points[:, 1]
         # Filter valid connections
         valid_connections = [
@@ -218,6 +229,26 @@ class Pose3DVisualizer:
         lines.lines = o3d.utility.Vector2iVector(valid_connections)
         lines.paint_uniform_color(color)
 
+    def _align_hand_to_pose_wrist(self, hand_landmarks: np.ndarray,
+                                   pose_wrist: np.ndarray) -> np.ndarray:
+        """Align hand landmarks to pose wrist position.
+
+        Args:
+            hand_landmarks: (21, 4) array of hand landmarks
+            pose_wrist: (3,) position of pose wrist
+
+        Returns:
+            Aligned hand landmarks with wrist at pose wrist position
+        """
+        if hand_landmarks is None or len(hand_landmarks) == 0:
+            return hand_landmarks
+
+        aligned = hand_landmarks.copy()
+        hand_wrist = aligned[HAND_WRIST, :3]
+        offset = pose_wrist - hand_wrist
+        aligned[:, :3] += offset
+        return aligned
+
     def update(self, pose_result: LandmarkResult = None, hand_result: HandResult = None):
         """
         Update visualizer with new landmark results.
@@ -226,11 +257,21 @@ class Pose3DVisualizer:
             pose_result: LandmarkResult containing pose landmarks
             hand_result: HandResult containing left and right hand landmarks
         """
+        # Get pose wrist positions for hand alignment
+        pose_left_wrist = None
+        pose_right_wrist = None
+        pose_landmarks = None
+
         # Update pose
         if pose_result is not None and pose_result.world is not None:
             pose_landmarks = pose_result.world.values
             self._update_point_cloud(self.pose_pcd, pose_landmarks, [1, 0, 0])  # Red
             self._update_line_set(self.pose_lines, pose_landmarks, POSE_CONNECTIONS, [0, 1, 0])  # Green
+            # Extract wrist positions for hand alignment
+            if len(pose_landmarks) > POSE_LEFT_WRIST:
+                pose_left_wrist = pose_landmarks[POSE_LEFT_WRIST, :3]
+            if len(pose_landmarks) > POSE_RIGHT_WRIST:
+                pose_right_wrist = pose_landmarks[POSE_RIGHT_WRIST, :3]
         else:
             self._update_point_cloud(self.pose_pcd, None, [1, 0, 0])
             self._update_line_set(self.pose_lines, None, POSE_CONNECTIONS, [0, 1, 0])
@@ -238,6 +279,9 @@ class Pose3DVisualizer:
         # Update left hand
         if hand_result is not None and hand_result.left.world is not None:
             left_landmarks = hand_result.left.world.values
+            # Align to pose wrist if available
+            if pose_left_wrist is not None:
+                left_landmarks = self._align_hand_to_pose_wrist(left_landmarks, pose_left_wrist)
             self._update_point_cloud(self.left_hand_pcd, left_landmarks, [0, 0, 1])  # Blue
             self._update_line_set(self.left_hand_lines, left_landmarks, HAND_CONNECTIONS, [0, 0.7, 1])  # Cyan
         else:
@@ -247,19 +291,28 @@ class Pose3DVisualizer:
         # Update right hand
         if hand_result is not None and hand_result.right.world is not None:
             right_landmarks = hand_result.right.world.values
+            # Align to pose wrist if available
+            if pose_right_wrist is not None:
+                right_landmarks = self._align_hand_to_pose_wrist(right_landmarks, pose_right_wrist)
             self._update_point_cloud(self.right_hand_pcd, right_landmarks, [1, 0.5, 0])  # Orange
             self._update_line_set(self.right_hand_lines, right_landmarks, HAND_CONNECTIONS, [1, 0.8, 0])  # Yellow
         else:
             self._update_point_cloud(self.right_hand_pcd, None, [1, 0.5, 0])
             self._update_line_set(self.right_hand_lines, None, HAND_CONNECTIONS, [1, 0.8, 0])
 
-        # Update geometries in visualizer
-        self.vis.update_geometry(self.pose_pcd)
-        self.vis.update_geometry(self.pose_lines)
-        self.vis.update_geometry(self.left_hand_pcd)
-        self.vis.update_geometry(self.left_hand_lines)
-        self.vis.update_geometry(self.right_hand_pcd)
-        self.vis.update_geometry(self.right_hand_lines)
+        # Update geometries in visualizer (only if points exist to avoid warnings)
+        if len(self.pose_pcd.points) > 0:
+            self.vis.update_geometry(self.pose_pcd)
+        if len(self.pose_lines.points) > 0:
+            self.vis.update_geometry(self.pose_lines)
+        if len(self.left_hand_pcd.points) > 0:
+            self.vis.update_geometry(self.left_hand_pcd)
+        if len(self.left_hand_lines.points) > 0:
+            self.vis.update_geometry(self.left_hand_lines)
+        if len(self.right_hand_pcd.points) > 0:
+            self.vis.update_geometry(self.right_hand_pcd)
+        if len(self.right_hand_lines.points) > 0:
+            self.vis.update_geometry(self.right_hand_lines)
 
         self.vis.poll_events()
         self.vis.update_renderer()
