@@ -1,6 +1,7 @@
 from mediapipe_inferencer_core.network import HolisticPoseSender
 from mediapipe_inferencer_core.detector import DetectorHandler, HandDetector, FaceDetector, PoseDetector
 from mediapipe_inferencer_core import visualizer
+from mediapipe_inferencer_core.visualizer_3d import Pose3DVisualizer
 from mediapipe_inferencer_core.image_provider import MmapImageProvider
 from mediapipe_inferencer_core.filter import OneEuroFilter
 from app_arg_parser import create_settings_from_args
@@ -77,6 +78,9 @@ if __name__ == "__main__":
         filter['pose_local'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
         filter['pose_world'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
 
+    # 3D visualizer
+    vis3d = Pose3DVisualizer()
+
     while running:
         # Break in key Ctrl+C pressed
         if cv2.waitKey(5) & 0xFF == 27:
@@ -113,5 +117,11 @@ if __name__ == "__main__":
                 annotated_image = visualizer.draw_face_landmarks_on_image(annotated_image, results.face)
             # cv2.imshow('MediaPipe Landmarks', cv2.flip(cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB), 1))
             cv2.imshow('MediaPipe Landmarks', cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB)) # no-flipping
+
+        # 3D visualization
+        vis3d.update(pose_result=results.pose, hand_result=results.hand)
+
         time.sleep(1/60)
+
+    vis3d.close()
     cv2.destroyAllWindows()
