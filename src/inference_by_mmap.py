@@ -79,7 +79,7 @@ if __name__ == "__main__":
         filter['pose_world'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
 
     # 3D visualizer
-    vis3d = Pose3DVisualizer()
+    vis3d = Pose3DVisualizer() if settings.enable_3d_visualization else None
 
     while running:
         # Break in key Ctrl+C pressed
@@ -119,9 +119,11 @@ if __name__ == "__main__":
             cv2.imshow('MediaPipe Landmarks', cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB)) # no-flipping
 
         # 3D visualization
-        vis3d.update(pose_result=results.pose, hand_result=results.hand)
+        if vis3d is not None:
+            vis3d.update(pose_result=results.pose, hand_result=results.hand)
 
         time.sleep(1/60)
 
-    vis3d.close()
+    if vis3d is not None:
+        vis3d.close()
     cv2.destroyAllWindows()
