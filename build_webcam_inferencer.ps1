@@ -1,1 +1,1 @@
-uv run nuitka --standalone --include-data-dir=./models=models --include-data-files=./settings.json=settings.json .\src\inference_by_webcam.py
+uv run nuitka --standalone --include-data-dir=./models=models --include-data-files=./settings.json=settings.json --include-package=pygrabber --include-package=comtypes --nofollow-import-to=comtypes.gen .\src\inference_by_webcam.py

@@ -17,7 +17,10 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["deptry>=0.23.1,<0.24"]
+dev = [
+    "deptry>=0.23.1,<0.24",
+    "grpcio-tools>=1.62.3",
+]
 
 [tool.hatch.build.targets.sdist]
 include = ["src"]
