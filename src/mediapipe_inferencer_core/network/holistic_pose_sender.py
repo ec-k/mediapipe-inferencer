@@ -19,6 +19,10 @@ class HolisticPoseSender:
         result = copy.deepcopy(holistic_results)
         if holistic_results.pose is not None and holistic_results.pose.world is not None:
             result.pose.world = transform_coordinate(holistic_results.pose.world)
+        if holistic_results.hand.left is not None and holistic_results.hand.left.world is not None:
+            result.hand.left.world = transform_coordinate(holistic_results.hand.left.world)
+        if holistic_results.hand.right is not None and holistic_results.hand.right.world is not None:
+            result.hand.right.world = transform_coordinate(holistic_results.hand.right.world)
         packed_results = pack_holistic_landmarks_result(result)
         msg = packed_results.SerializeToString()
         return self.client.send_protobuf_message(msg)
