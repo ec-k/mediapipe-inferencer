@@ -785,7 +785,7 @@ requires-dist = [
     { name = "mediapipe", specifier = "==0.10.14" },
     { name = "nuitka", specifier = ">=2.7.12,<3.0.0" },
     { name = "numpy", specifier = ">=2.3.5,<3.0.0" },
-    { name = "open3d" },
+    { name = "open3d", specifier = ">=0.19.0" },
     { name = "opencv-python", specifier = ">=4.11.0.86,<5.0.0.0" },
     { name = "pytest", specifier = ">=8.3.4,<9.0.0" },
     { name = "scipy", specifier = ">=1.15.2,<2.0.0" },
