@@ -1,1 +1,1 @@
-uv run nuitka --standalone --nofollow-import-to=open3d --nofollow-import-to=mediapipe_inferencer_core.visualizer_3d --include-data-dir=./models=models --include-data-files=./settings.json=settings.json --jobs=4 .\src\inference_by_mmap.py
+uv run nuitka --standalone --nofollow-import-to=open3d --nofollow-import-to=mediapipe_inferencer_core.visualizer_3d --include-data-dir=./models=models --include-data-files=./settings.json=settings.json --include-package=pygrabber --include-package=comtypes --nofollow-import-to=comtypes.gen .\src\inference_by_mmap.py
