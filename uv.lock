@@ -194,6 +194,15 @@ wheels = [
 ]
 
 [[package]]
+name = "comtypes"
+version = "1.4.15"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/08/a2/2db93b226887c9a9a354cb39269507213e171fca5be32aeef21b47f14aeb/comtypes-1.4.15.tar.gz", hash = "sha256:c72b9968a4e920087183a364c5a13b174e02b11c302cdd92690d14c95ac1b312", size = 241406, upload-time = "2026-01-19T23:45:46.035Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/03/2f/ca9029d5da14b5a3a103d6061149a4a94a54ab848f56c7d2809dbb36f48c/comtypes-1.4.15-py3-none-any.whl", hash = "sha256:cda90486de8762ec57d7ce04e68721920911f3f03415cb29afdf7609c427c7e3", size = 274650, upload-time = "2026-01-19T23:45:44.34Z" },
+]
+
+[[package]]
 name = "configargparse"
 version = "1.7.1"
 source = { registry = "https://pypi.org/simple" }
@@ -849,6 +858,7 @@ dependencies = [
     { name = "numpy" },
     { name = "open3d" },
     { name = "opencv-python" },
+    { name = "pygrabber" },
     { name = "pytest" },
     { name = "scipy" },
 ]
@@ -867,6 +877,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.3.5,<3.0.0" },
     { name = "open3d", specifier = ">=0.19.0" },
     { name = "opencv-python", specifier = ">=4.11.0.86,<5.0.0.0" },
+    { name = "pygrabber", specifier = ">=0.2" },
     { name = "pytest", specifier = ">=8.3.4,<9.0.0" },
     { name = "scipy", specifier = ">=1.15.2,<2.0.0" },
 ]
@@ -1288,6 +1299,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b0/77/a5b8c569bf593b0140bde72ea885a803b82086995367bf2037de0159d924/pygments-2.19.2.tar.gz", hash = "sha256:636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887", size = 4968631, upload-time = "2025-06-21T13:39:12.283Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c7/21/705964c7812476f378728bdf590ca4b771ec72385c533964653c68e86bdc/pygments-2.19.2-py3-none-any.whl", hash = "sha256:86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b", size = 1225217, upload-time = "2025-06-21T13:39:07.939Z" },
+]
+
+[[package]]
+name = "pygrabber"
+version = "0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "comtypes" },
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d4/24/e7e5efa1d915853f3f34cedf751cbee9d88bee47a41122d495ee95452dad/pygrabber-0.2.tar.gz", hash = "sha256:e584b119d4c9b9a8f339eb34d1fe7fdd16214a2bf5a1876171145caebdb9e413", size = 18487, upload-time = "2023-10-20T07:17:14.97Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7a/51/0359e171686a7eeda5e975d7f9dfba6a67e04b33c7ddad1f7a343c171e55/pygrabber-0.2-py3-none-any.whl", hash = "sha256:5ac8bbe5f6a5dfb7c1c9c55d80ca9b9457743abd3ac8efa21cb9e302bdbf03ac", size = 24193, upload-time = "2023-10-20T07:17:13.1Z" },
 ]
 
 [[package]]
