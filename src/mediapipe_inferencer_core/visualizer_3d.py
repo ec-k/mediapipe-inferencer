@@ -6,6 +6,9 @@ from mediapipe_inferencer_core.data_class import LandmarkResult, HandResult
 POSE_LEFT_WRIST = 15
 POSE_RIGHT_WRIST = 16
 
+# MediaPipe Pose hand landmarks (fingertips beyond wrist, indices 17-22)
+POSE_HAND_LANDMARK_INDICES = set(range(17, 23))
+
 # MediaPipe Hand landmark indices
 HAND_WRIST = 0
 
@@ -76,9 +79,13 @@ class Pose3DVisualizer:
         R: Reset camera position
     """
 
-    def __init__(self, window_name: str = "Pose 3D", width: int = 800, height: int = 600):
+    def __init__(self, window_name: str = "Pose 3D", width: int = 800, height: int = 600,
+                 hide_pose_hand_landmarks: bool = True):
         self.vis = o3d.visualization.VisualizerWithKeyCallback()
         self.vis.create_window(window_name, width=width, height=height)
+
+        # Display options
+        self.hide_pose_hand_landmarks = hide_pose_hand_landmarks
 
         # Camera state
         self.camera_pos = np.array([0.0, 1.0, -5.0])
@@ -191,8 +198,16 @@ class Pose3DVisualizer:
         ctr.convert_from_pinhole_camera_parameters(param, allow_arbitrary=True)
 
     def _update_point_cloud(self, pcd: o3d.geometry.PointCloud,
-                            landmarks: np.ndarray, color: list):
-        """Update point cloud geometry with new landmarks."""
+                            landmarks: np.ndarray, color: list,
+                            exclude_indices: set = None):
+        """Update point cloud geometry with new landmarks.
+
+        Args:
+            pcd: Point cloud geometry to update
+            landmarks: (N, 4) array of landmarks [x, y, z, confidence]
+            color: RGB color for the points
+            exclude_indices: Set of landmark indices to exclude from display
+        """
         if landmarks is None or len(landmarks) == 0:
             pcd.points = o3d.utility.Vector3dVector(np.zeros((0, 3)))
             return
@@ -203,12 +218,27 @@ class Pose3DVisualizer:
         points = landmarks[:, :3].copy()
         points[:, 0] = -points[:, 0]
         points[:, 1] = -points[:, 1]
+
+        # Exclude specified indices
+        if exclude_indices:
+            mask = [i not in exclude_indices for i in range(len(points))]
+            points = points[mask]
+
         pcd.points = o3d.utility.Vector3dVector(points)
         pcd.paint_uniform_color(color)
 
     def _update_line_set(self, lines: o3d.geometry.LineSet,
-                         landmarks: np.ndarray, connections: list, color: list):
-        """Update line set geometry with new landmarks and connections."""
+                         landmarks: np.ndarray, connections: list, color: list,
+                         exclude_indices: set = None):
+        """Update line set geometry with new landmarks and connections.
+
+        Args:
+            lines: Line set geometry to update
+            landmarks: (N, 4) array of landmarks [x, y, z, confidence]
+            connections: List of (start, end) index pairs for lines
+            color: RGB color for the lines
+            exclude_indices: Set of landmark indices to exclude from display
+        """
         if landmarks is None or len(landmarks) == 0:
             lines.points = o3d.utility.Vector3dVector(np.zeros((0, 3)))
             lines.lines = o3d.utility.Vector2iVector([])
@@ -219,10 +249,12 @@ class Pose3DVisualizer:
         points = landmarks[:, :3].copy()
         points[:, 0] = -points[:, 0]
         points[:, 1] = -points[:, 1]
-        # Filter valid connections
+
+        # Filter valid connections (exclude connections involving excluded indices)
         valid_connections = [
             conn for conn in connections
             if conn[0] < len(points) and conn[1] < len(points)
+            and (not exclude_indices or (conn[0] not in exclude_indices and conn[1] not in exclude_indices))
         ]
 
         lines.points = o3d.utility.Vector3dVector(points)
@@ -262,11 +294,14 @@ class Pose3DVisualizer:
         pose_right_wrist = None
         pose_landmarks = None
 
+        # Determine which pose landmarks to exclude
+        pose_exclude = POSE_HAND_LANDMARK_INDICES if self.hide_pose_hand_landmarks else None
+
         # Update pose
         if pose_result is not None and pose_result.world is not None:
             pose_landmarks = pose_result.world.values
-            self._update_point_cloud(self.pose_pcd, pose_landmarks, [1, 0, 0])  # Red
-            self._update_line_set(self.pose_lines, pose_landmarks, POSE_CONNECTIONS, [0, 1, 0])  # Green
+            self._update_point_cloud(self.pose_pcd, pose_landmarks, [1, 0, 0], pose_exclude)  # Red
+            self._update_line_set(self.pose_lines, pose_landmarks, POSE_CONNECTIONS, [0, 1, 0], pose_exclude)  # Green
             # Extract wrist positions for hand alignment
             if len(pose_landmarks) > POSE_LEFT_WRIST:
                 pose_left_wrist = pose_landmarks[POSE_LEFT_WRIST, :3]
