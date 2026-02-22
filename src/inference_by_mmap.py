@@ -77,6 +77,12 @@ if __name__ == "__main__":
         filter['pose_local'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
         filter['pose_world'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
 
+    # 3D visualizer (lazy import to avoid open3d dependency in standalone build)
+    vis3d = None
+    if settings.enable_3d_visualization:
+        from mediapipe_inferencer_core.visualizer_3d import Pose3DVisualizer
+        vis3d = Pose3DVisualizer()
+
     while running:
         # Break in key Ctrl+C pressed
         if cv2.waitKey(5) & 0xFF == 27:
@@ -113,5 +119,13 @@ if __name__ == "__main__":
                 annotated_image = visualizer.draw_face_landmarks_on_image(annotated_image, results.face)
             # cv2.imshow('MediaPipe Landmarks', cv2.flip(cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB), 1))
             cv2.imshow('MediaPipe Landmarks', cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB)) # no-flipping
+
+        # 3D visualization
+        if vis3d is not None:
+            vis3d.update(pose_result=results.pose, hand_result=results.hand)
+
         time.sleep(1/60)
+
+    if vis3d is not None:
+        vis3d.close()
     cv2.destroyAllWindows()
