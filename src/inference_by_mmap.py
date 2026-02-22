@@ -1,7 +1,6 @@
 from mediapipe_inferencer_core.network import HolisticPoseSender
 from mediapipe_inferencer_core.detector import DetectorHandler, HandDetector, FaceDetector, PoseDetector
 from mediapipe_inferencer_core import visualizer
-from mediapipe_inferencer_core.visualizer_3d import Pose3DVisualizer
 from mediapipe_inferencer_core.image_provider import MmapImageProvider
 from mediapipe_inferencer_core.filter import OneEuroFilter
 from app_arg_parser import create_settings_from_args
@@ -78,8 +77,11 @@ if __name__ == "__main__":
         filter['pose_local'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
         filter['pose_world'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
 
-    # 3D visualizer
-    vis3d = Pose3DVisualizer() if settings.enable_3d_visualization else None
+    # 3D visualizer (lazy import to avoid open3d dependency in standalone build)
+    vis3d = None
+    if settings.enable_3d_visualization:
+        from mediapipe_inferencer_core.visualizer_3d import Pose3DVisualizer
+        vis3d = Pose3DVisualizer()
 
     while running:
         # Break in key Ctrl+C pressed
