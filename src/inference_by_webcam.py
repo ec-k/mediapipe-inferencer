@@ -33,18 +33,31 @@ def load_config(base_dir: Path) -> dict:
         return json.load(f)
 
 
-def create_filters():
-    min_cutoff, slope, d_min_cutoff = 1.0, 4.0, 1.0
+def get_filter_params(config: dict, filter_type: str) -> tuple[float, float, float]:
+    filter_config = config.get("filter", {})
+    default = filter_config.get("default", {})
+    specific = filter_config.get(filter_type, {})
+    merged = {**default, **specific}
+    return (
+        merged.get("min_cutoff", 1.0),
+        merged.get("slope", 1.0),
+        merged.get("d_min_cutoff", 1.0)
+    )
+
+
+def create_filters(config: dict):
+    hand_params = get_filter_params(config, "hand")
+    face_params = get_filter_params(config, "face")
+    pose_params = get_filter_params(config, "pose")
     filters = {
-        'left_hand_local':  OneEuroFilter(min_cutoff, slope, d_min_cutoff),
-        'left_hand_world':  OneEuroFilter(min_cutoff, slope, d_min_cutoff),
-        'right_hand_local': OneEuroFilter(min_cutoff, slope, d_min_cutoff),
-        'right_hand_world': OneEuroFilter(min_cutoff, slope, d_min_cutoff),
-        'face_landmark':    OneEuroFilter(min_cutoff, slope, d_min_cutoff)
+        'left_hand_local':  OneEuroFilter(*hand_params),
+        'left_hand_world':  OneEuroFilter(*hand_params),
+        'right_hand_local': OneEuroFilter(*hand_params),
+        'right_hand_world': OneEuroFilter(*hand_params),
+        'face_landmark':    OneEuroFilter(*face_params),
+        'pose_local':       OneEuroFilter(*pose_params),
+        'pose_world':       OneEuroFilter(*pose_params)
     }
-    min_cutoff, slope = 0.08, 0.5
-    filters['pose_local'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
-    filters['pose_world'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
     return filters
 
 
@@ -96,7 +109,7 @@ if __name__ == "__main__":
         if camera_devices:
             estimation_state.set_camera_name(camera_devices[0])
     image_provider = WebcamImageProvider(cache_queue_length=2, device_index=initial_camera_index)
-    filters = create_filters()
+    filters = create_filters(config)
 
     # Initialize preview writer if path is specified
     preview_writer = None

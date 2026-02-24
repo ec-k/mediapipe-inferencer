@@ -31,6 +31,18 @@ def load_config(base_dir: Path) -> dict:
     with open(settings_path) as f:
         return json.load(f)
 
+
+def get_filter_params(config: dict, filter_type: str) -> tuple[float, float, float]:
+    filter_config = config.get("filter", {})
+    default = filter_config.get("default", {})
+    specific = filter_config.get(filter_type, {})
+    merged = {**default, **specific}
+    return (
+        merged.get("min_cutoff", 1.0),
+        merged.get("slope", 1.0),
+        merged.get("d_min_cutoff", 1.0)
+    )
+
 running = True
 
 def handle_sigint(signum, frame):
@@ -64,18 +76,19 @@ if __name__ == "__main__":
         raise FileNotFoundError(f"The specified path does not exist: '{filepath}'")
     image_provider = MmapImageProvider(cache_queue_length=2, data_file_path=settings.mmap_file_path, shape=shape)
 
-    min_cutoff, slope, d_min_cutoff = 1.0, 1.0, 1.0
+    hand_params = get_filter_params(config, "hand")
+    face_params = get_filter_params(config, "face")
     filter = {
-        'left_hand_local':  OneEuroFilter(min_cutoff, slope, d_min_cutoff),
-        'left_hand_world':  OneEuroFilter(min_cutoff, slope, d_min_cutoff),
-        'right_hand_local': OneEuroFilter(min_cutoff, slope, d_min_cutoff),
-        'right_hand_world': OneEuroFilter(min_cutoff, slope, d_min_cutoff),
-        'face_landmark':    OneEuroFilter(min_cutoff, slope, d_min_cutoff)
+        'left_hand_local':  OneEuroFilter(*hand_params),
+        'left_hand_world':  OneEuroFilter(*hand_params),
+        'right_hand_local': OneEuroFilter(*hand_params),
+        'right_hand_world': OneEuroFilter(*hand_params),
+        'face_landmark':    OneEuroFilter(*face_params)
         }
     if settings.enable_pose_inference:
-        min_cutoff, slope = 0.08, 0.5
-        filter['pose_local'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
-        filter['pose_world'] = OneEuroFilter(min_cutoff, slope, d_min_cutoff)
+        pose_params = get_filter_params(config, "pose")
+        filter['pose_local'] = OneEuroFilter(*pose_params)
+        filter['pose_world'] = OneEuroFilter(*pose_params)
 
     # 3D visualizer (lazy import to avoid open3d dependency in standalone build)
     vis3d = None

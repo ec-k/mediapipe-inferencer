@@ -3,5 +3,16 @@
   "pose_sender": {
     "host": "localhost",
     "port": 9001
+  },
+  "filter": {
+    "default": {
+      "min_cutoff": 1.0,
+      "slope": 1.0,
+      "d_min_cutoff": 1.0
+    },
+    "pose": {
+      "min_cutoff": 0.08,
+      "slope": 0.5
+    }
   }
 }
