@@ -13,6 +13,10 @@
     "pose": {
       "min_cutoff": 0.08,
       "slope": 0.5
+    },
+    "hand": {
+      "min_cutoff": 0.08,
+      "slope": 6.0
     }
   }
 }
