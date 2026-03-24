@@ -64,8 +64,8 @@ if __name__ == "__main__":
     models_dir = str(base_dir / config["models_dir"])
     holistic_detector = DetectorHandler(
         pose=PoseDetector(models_dir + "/pose_landmarker_full.task", 0.8) if settings.enable_pose_inference else None,
-        hand=HandDetector(models_dir + "/hand_landmarker.task", 0.8),
-        face=FaceDetector(models_dir + "/face_landmarker.task", 0.8)
+        hand=HandDetector(models_dir + "/hand_landmarker.task", 0.5),
+        face=FaceDetector(models_dir + "/face_landmarker.task", 0.5)
     )
 
     height, width = 720, 1280
